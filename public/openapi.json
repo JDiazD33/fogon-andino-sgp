@@ -1,0 +1,2468 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Fogón Andino SGP v2 · API local",
+    "version": "2.0.0",
+    "description": "Contrato REST del prototipo académico del SGP v2. Cubre las seis capacidades de la Figura 14 del Avance 2 (carta y precios por sede, gestión de pedidos, cocina digital, delivery y despacho, reservas de mesa, y caja y cobros) y los seis canales de venta: salón, web, WhatsApp, teléfono, Rappi y PedidosYa. Los pedidos, pagos, comprobantes y existencias son datos de demostración; los eventos de dominio se guardan en PostgreSQL."
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": "Mismo origen que el prototipo"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Demo"
+    },
+    {
+      "name": "Pedidos"
+    }
+  ],
+  "paths": {
+    "/api/health": {
+      "get": {
+        "tags": [
+          "Demo"
+        ],
+        "operationId": "checkHealth",
+        "summary": "Comprobar la conexión con PostgreSQL",
+        "responses": {
+          "200": {
+            "description": "API activa y versión de PostgreSQL consultada en la base de demostración.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/state": {
+      "get": {
+        "tags": [
+          "Demo"
+        ],
+        "operationId": "getSiteState",
+        "summary": "Consultar carta, pedidos, existencias y eventos de una sede",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "site",
+            "description": "Sede a consultar. Si se omite, se devuelve Miraflores.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "miraflores",
+                "san-isidro"
+              ],
+              "default": "miraflores"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Estado de la sede seleccionada y directorio de sedes de prueba.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteState"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/orders": {
+      "post": {
+        "tags": [
+          "Pedidos"
+        ],
+        "operationId": "createOrder",
+        "summary": "Registrar un pedido de un canal propio",
+        "description": "Un solo gestor para salón, web, WhatsApp y teléfono. Valida cobertura, stock por receta, platos activos y el medio de pago del canal. Con pago aprobado registra el cobro y emite el comprobante en la misma transacción. En salón, payment pending deja la cuenta abierta.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/WebOrderInput"
+                  },
+                  {
+                    "$ref": "#/components/schemas/SalonOrderInput"
+                  }
+                ]
+              },
+              "examples": {
+                "web": {
+                  "summary": "Pedido web con delivery en Miraflores",
+                  "value": {
+                    "siteId": "miraflores",
+                    "channel": "web",
+                    "zone": "Miraflores",
+                    "payment": "approved",
+                    "items": [
+                      {
+                        "productId": "lomo-saltado",
+                        "quantity": 1
+                      }
+                    ]
+                  }
+                },
+                "salon": {
+                  "summary": "Comanda de una mesa de Miraflores",
+                  "value": {
+                    "siteId": "miraflores",
+                    "channel": "salon",
+                    "table": "Mesa 01",
+                    "payment": "pending",
+                    "items": [
+                      {
+                        "productId": "chicha-morada",
+                        "quantity": 1
+                      }
+                    ]
+                  }
+                },
+                "whatsapp": {
+                  "summary": "Pedido de WhatsApp para recojo pagado con Yape",
+                  "value": {
+                    "siteId": "miraflores",
+                    "channel": "whatsapp",
+                    "fulfillment": "recojo",
+                    "customer": "Ana Torres",
+                    "phone": "999 888 777",
+                    "payment": "approved",
+                    "method": "yape",
+                    "items": [
+                      {
+                        "productId": "chicha-morada",
+                        "quantity": 1
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Pedido creado, con el identificador que usan cocina y despacho.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "402": {
+            "description": "PAYMENT. Pago de prueba rechazado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/OriginError"
+          },
+          "409": {
+            "description": "STOCK. Los insumos disponibles no cubren el pedido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadError"
+          },
+          "415": {
+            "$ref": "#/components/responses/MediaTypeError"
+          },
+          "422": {
+            "description": "COVERAGE. La sede no atiende la zona de entrega.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/orders/{id}": {
+      "get": {
+        "tags": [
+          "Pedidos"
+        ],
+        "operationId": "getOrder",
+        "summary": "Recuperar un pedido por su número",
+        "description": "Consulta el pedido persistido sin depender de la sede seleccionada ni de los datos del navegador.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/OrderId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pedido con su estado, historial, referencia y código si corresponde.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/OrderNotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Pedidos"
+        ],
+        "operationId": "advanceOrder",
+        "summary": "Avanzar al siguiente estado del pedido",
+        "description": "Desde registrado, ambos canales pasan por preparacion y listo. En salón se continúa a entregado. En web se continúa a en_camino y se confirma entregado con el código de cuatro dígitos. Al marcar listo se descuentan los insumos y se genera la referencia de prueba.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/OrderId"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrderUpdate"
+              },
+              "example": {
+                "status": "preparacion"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Pedido con su nuevo estado y el historial actualizado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "403": {
+            "$ref": "#/components/responses/OriginError"
+          },
+          "404": {
+            "$ref": "#/components/responses/OrderNotFound"
+          },
+          "409": {
+            "description": "TRANSITION. El estado solicitado se salta un paso o el pedido ya terminó.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadError"
+          },
+          "415": {
+            "$ref": "#/components/responses/MediaTypeError"
+          },
+          "422": {
+            "description": "CODE. El código de entrega web falta o es incorrecto.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/orders/{id}/receipt": {
+      "get": {
+        "tags": [
+          "Pedidos"
+        ],
+        "operationId": "getOrderReceipt",
+        "summary": "Abrir la boleta de venta de demostración en PDF",
+        "description": "Disponible desde el estado listo. Genera la boleta con los importes y el detalle persistidos del pedido. El documento indica que carece de valor fiscal.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/OrderId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Boleta PDF para vista previa en el navegador.",
+            "headers": {
+              "Content-Disposition": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "inline; filename=\"Boleta-DEMO-FA-1001.pdf\""
+              }
+            },
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/OrderNotFound"
+          },
+          "409": {
+            "description": "RECEIPT_PENDING. La cocina todavía debe marcar el pedido como listo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/reset": {
+      "post": {
+        "tags": [
+          "Demo"
+        ],
+        "operationId": "resetDemo",
+        "summary": "Restablecer los datos de prueba desde la computadora anfitriona",
+        "description": "Permite repetir el ensayo. Elimina los pedidos y sus eventos de ambas sedes y repone las existencias iniciales. Solo admite conexiones de loopback.",
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/Ok"
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "403": {
+            "description": "RESET_LOCAL para conexiones fuera de loopback u ORIGIN para otro origen web.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadError"
+          },
+          "415": {
+            "$ref": "#/components/responses/MediaTypeError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/reservations": {
+      "get": {
+        "tags": [
+          "Reservas"
+        ],
+        "operationId": "getReservationAgenda",
+        "summary": "Consultar la agenda de reservas de una sede y una fecha",
+        "description": "Devuelve las mesas de la sede, los turnos de servicio y las reservas de esa fecha. La regla de una mesa por turno la impone un índice único en la base de datos.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "site",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/SiteId"
+            },
+            "description": "Sede. Por defecto, la primera sede."
+          },
+          {
+            "in": "query",
+            "name": "date",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Fecha de la agenda. Por defecto, hoy en Lima."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Agenda de la fecha con sus mesas, turnos y reservas.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReservationAgenda"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Reservas"
+        ],
+        "operationId": "createReservation",
+        "summary": "Registrar una reserva de mesa",
+        "description": "Comprueba que la mesa exista en la sede, que la cantidad de personas quepa en ella y que el turno esté libre. Registra la reserva en estado registrada y publica el evento de dominio.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReservationInput"
+              },
+              "example": {
+                "siteId": "miraflores",
+                "table": "Mesa 03",
+                "customer": "Lucía Quispe",
+                "phone": "987 654 321",
+                "people": 4,
+                "slot": "20:00",
+                "date": "2026-11-23"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Reserva registrada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReservationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "409": {
+            "description": "SLOT_TAKEN. La mesa ya está reservada en ese turno, o CAPACITY. La reserva excede los lugares de la mesa.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadError"
+          },
+          "415": {
+            "$ref": "#/components/responses/MediaTypeError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/reservations/{id}": {
+      "patch": {
+        "tags": [
+          "Reservas"
+        ],
+        "operationId": "advanceReservation",
+        "summary": "Avanzar el estado de una reserva",
+        "description": "El flujo válido es registrada → confirmada → en_curso → completada. Desde registrada o confirmada se puede cancelar o marcar como no presentado.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ReservationId"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReservationUpdate"
+              },
+              "example": {
+                "status": "confirmada"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Reserva con su nuevo estado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReservationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "404": {
+            "$ref": "#/components/responses/ReservationNotFound"
+          },
+          "409": {
+            "description": "TRANSITION. El estado solicitado se salta un paso o la reserva ya terminó.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadError"
+          },
+          "415": {
+            "$ref": "#/components/responses/MediaTypeError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/api/connectors/{channel}/orders": {
+      "post": {
+        "tags": [
+          "Hub de integración"
+        ],
+        "operationId": "receiveAggregatorOrder",
+        "summary": "Recibir el webhook de un agregador",
+        "description": "Cada agregador envía su propio formato; el conector lo traduce al pedido del gestor único con los precios de la carta de la sede. Idempotente: un mensaje repetido con el mismo identificador externo no crea otro pedido (200, duplicate true).",
+        "parameters": [
+          {
+            "name": "channel",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "rappi",
+                "pedidosya"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              },
+              "examples": {
+                "rappi": {
+                  "value": {
+                    "order_id": "RP-77120",
+                    "store_id": "fogon-miraflores",
+                    "items": [
+                      {
+                        "sku": "aji-de-gallina",
+                        "units": 1
+                      }
+                    ],
+                    "client": {
+                      "name": "Valeria Núñez",
+                      "phone": "944 120 300"
+                    },
+                    "delivery": {
+                      "neighborhood": "Barranco"
+                    }
+                  }
+                },
+                "pedidosya": {
+                  "value": {
+                    "id": 551203,
+                    "restaurant": {
+                      "integrationCode": "miraflores"
+                    },
+                    "details": [
+                      {
+                        "integrationCode": "arroz-con-pollo",
+                        "quantity": 1
+                      }
+                    ],
+                    "user": {
+                      "name": "Mateo Ríos",
+                      "phone": "933 400 100"
+                    },
+                    "address": {
+                      "area": "Miraflores"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Pedido creado en el OMS.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "duplicate": {
+                      "type": "boolean",
+                      "enum": [
+                        false
+                      ]
+                    },
+                    "order": {
+                      "$ref": "#/components/schemas/Order"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Mensaje repetido: se devuelve el pedido existente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "duplicate": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "order": {
+                      "$ref": "#/components/schemas/Order"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "404": {
+            "description": "NOT_FOUND. No hay conector para ese canal.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "STOCK o INACTIVE.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "COVERAGE. Zona sin cobertura de la sede.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/orders/{id}/payment": {
+      "post": {
+        "tags": [
+          "Caja y cobros"
+        ],
+        "operationId": "payOrder",
+        "summary": "Cobrar una cuenta de salón",
+        "description": "Registra el pago y emite boleta o factura con correlativo único por serie, en una sola transacción.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/OrderId"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "method"
+                ],
+                "properties": {
+                  "method": {
+                    "type": "string",
+                    "enum": [
+                      "efectivo",
+                      "tarjeta",
+                      "yape",
+                      "plin"
+                    ]
+                  },
+                  "received": {
+                    "type": "number",
+                    "description": "Efectivo recibido; obligatorio con efectivo."
+                  },
+                  "receipt": {
+                    "$ref": "#/components/schemas/ReceiptInput"
+                  }
+                }
+              },
+              "example": {
+                "method": "efectivo",
+                "received": 50,
+                "receipt": {
+                  "type": "factura",
+                  "document": "20601234567",
+                  "name": "Consultora Andina S.A.C."
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Cuenta cobrada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "404": {
+            "$ref": "#/components/responses/OrderNotFound"
+          },
+          "409": {
+            "description": "ALREADY_PAID o CASH_SHORT.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cash-closures": {
+      "post": {
+        "tags": [
+          "Caja y cobros"
+        ],
+        "operationId": "closeCash",
+        "summary": "Cerrar la caja de la sede con arqueo",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "siteId",
+                  "countedCash"
+                ],
+                "properties": {
+                  "siteId": {
+                    "$ref": "#/components/schemas/SiteId"
+                  },
+                  "countedCash": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Cierre registrado con la diferencia entre efectivo esperado y contado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "closure": {
+                      "$ref": "#/components/schemas/CashClosure"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "409": {
+            "description": "OPEN_TABS (cuentas sin cobrar) o NOTHING_TO_CLOSE.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/sites/{site}/products/{product}": {
+      "patch": {
+        "tags": [
+          "Carta"
+        ],
+        "operationId": "updateSiteProduct",
+        "summary": "Cambiar precio o disponibilidad de un plato en una sede",
+        "parameters": [
+          {
+            "name": "site",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/SiteId"
+            }
+          },
+          {
+            "name": "product",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "price": {
+                    "type": "number",
+                    "minimum": 1,
+                    "maximum": 999
+                  },
+                  "active": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Plato actualizado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "404": {
+            "description": "NOT_FOUND.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/metrics": {
+      "get": {
+        "tags": [
+          "Indicadores"
+        ],
+        "operationId": "getMetrics",
+        "summary": "Indicadores del día de una sede",
+        "parameters": [
+          {
+            "name": "site",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/SiteId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Indicadores.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Metrics"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Health": {
+        "type": "object",
+        "required": [
+          "ok",
+          "api",
+          "database",
+          "databaseVersion"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "api": {
+            "type": "string",
+            "enum": [
+              "NestJS"
+            ]
+          },
+          "database": {
+            "type": "string",
+            "enum": [
+              "PostgreSQL"
+            ]
+          },
+          "databaseVersion": {
+            "type": "string",
+            "description": "Versión que informa el servidor de base de datos activo."
+          }
+        }
+      },
+      "SiteId": {
+        "type": "string",
+        "enum": [
+          "miraflores",
+          "san-isidro"
+        ]
+      },
+      "OrderId": {
+        "type": "string",
+        "pattern": "^FA-[0-9]+$",
+        "example": "FA-1001"
+      },
+      "OrderStatus": {
+        "type": "string",
+        "enum": [
+          "registrado",
+          "preparacion",
+          "listo",
+          "en_camino",
+          "entregado"
+        ]
+      },
+      "OrderInput": {
+        "type": "object",
+        "required": [
+          "siteId",
+          "payment",
+          "items"
+        ],
+        "properties": {
+          "siteId": {
+            "$ref": "#/components/schemas/SiteId"
+          },
+          "payment": {
+            "type": "string",
+            "enum": [
+              "approved",
+              "declined",
+              "pending"
+            ],
+            "description": "Resultado simulado del pago. pending deja una cuenta abierta (solo salón)."
+          },
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 50,
+            "description": "Se combinan las líneas con el mismo producto. El máximo es de 50 porciones por producto.",
+            "items": {
+              "$ref": "#/components/schemas/OrderItemInput"
+            }
+          },
+          "method": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaymentMethod"
+              }
+            ],
+            "description": "Medio de pago aceptado por el canal. Por omisión, el primero del canal."
+          },
+          "receipt": {
+            "$ref": "#/components/schemas/ReceiptInput"
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "normal",
+              "alta"
+            ]
+          }
+        }
+      },
+      "WebOrderInput": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/OrderInput"
+          },
+          {
+            "type": "object",
+            "required": [
+              "channel"
+            ],
+            "properties": {
+              "channel": {
+                "type": "string",
+                "enum": [
+                  "web",
+                  "whatsapp",
+                  "telefono"
+                ]
+              },
+              "fulfillment": {
+                "type": "string",
+                "enum": [
+                  "delivery",
+                  "recojo"
+                ],
+                "default": "delivery"
+              },
+              "zone": {
+                "type": "string",
+                "description": "Obligatoria con delivery: zona incluida en deliveryZones.",
+                "example": "Miraflores"
+              },
+              "customer": {
+                "type": "string",
+                "description": "Obligatorio en WhatsApp y teléfono."
+              },
+              "phone": {
+                "type": "string",
+                "description": "Obligatorio en WhatsApp y teléfono."
+              }
+            }
+          }
+        ]
+      },
+      "SalonOrderInput": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/OrderInput"
+          },
+          {
+            "type": "object",
+            "required": [
+              "channel",
+              "table"
+            ],
+            "properties": {
+              "channel": {
+                "type": "string",
+                "enum": [
+                  "salon"
+                ]
+              },
+              "table": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 24,
+                "description": "Mesa de la sede. El servidor recorta los espacios de los extremos.",
+                "example": "Mesa 01"
+              }
+            }
+          }
+        ]
+      },
+      "OrderItemInput": {
+        "type": "object",
+        "required": [
+          "productId",
+          "quantity"
+        ],
+        "properties": {
+          "productId": {
+            "type": "string",
+            "example": "lomo-saltado"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50
+          }
+        }
+      },
+      "OrderUpdate": {
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "preparacion",
+              "listo",
+              "en_camino",
+              "entregado"
+            ]
+          },
+          "code": {
+            "type": "string",
+            "pattern": "^[0-9]{4}$",
+            "description": "Obligatorio al confirmar la entrega de un pedido con delivery.",
+            "example": "7132"
+          },
+          "courierId": {
+            "type": "string",
+            "description": "Obligatorio al pasar a en_camino un pedido de canal propio. Los agregadores usan su repartidor.",
+            "example": "mf-carlos"
+          }
+        }
+      },
+      "OrderResponse": {
+        "type": "object",
+        "required": [
+          "order"
+        ],
+        "properties": {
+          "order": {
+            "$ref": "#/components/schemas/Order"
+          }
+        }
+      },
+      "Order": {
+        "type": "object",
+        "required": [
+          "channel",
+          "channelName",
+          "code",
+          "createdAt",
+          "dueAt",
+          "fulfillment",
+          "history",
+          "id",
+          "items",
+          "payment",
+          "priority",
+          "reference",
+          "siteId",
+          "status",
+          "table",
+          "targetMinutes",
+          "total",
+          "updatedAt",
+          "zone"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/OrderId"
+          },
+          "siteId": {
+            "$ref": "#/components/schemas/SiteId"
+          },
+          "channel": {
+            "$ref": "#/components/schemas/ChannelId"
+          },
+          "table": {
+            "type": "string",
+            "nullable": true,
+            "description": "Mesa del pedido de salón."
+          },
+          "zone": {
+            "type": "string",
+            "nullable": true,
+            "description": "Zona de entrega de un pedido con delivery."
+          },
+          "payment": {
+            "type": "string",
+            "enum": [
+              "approved",
+              "pending"
+            ],
+            "description": "pending solo en salón: cuenta abierta por cobrar en caja."
+          },
+          "status": {
+            "$ref": "#/components/schemas/OrderStatus"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrderItem"
+            }
+          },
+          "total": {
+            "type": "number",
+            "description": "Importe en soles (PEN).",
+            "example": 36.5
+          },
+          "reference": {
+            "type": "string",
+            "nullable": true,
+            "description": "Serie y número del comprobante emitido al cobrar."
+          },
+          "code": {
+            "type": "string",
+            "nullable": true,
+            "description": "Código de entrega generado al marcar listo un pedido web.",
+            "example": "7132"
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HistoryEntry"
+            }
+          },
+          "channelName": {
+            "type": "string"
+          },
+          "channelType": {
+            "type": "string",
+            "enum": [
+              "propio",
+              "agregador"
+            ]
+          },
+          "fulfillment": {
+            "$ref": "#/components/schemas/Fulfillment"
+          },
+          "customer": {
+            "type": "string",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "externalRef": {
+            "type": "string",
+            "nullable": true,
+            "description": "Identificador del pedido en el agregador. Único por canal."
+          },
+          "paymentMethod": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaymentMethod"
+              }
+            ],
+            "nullable": true
+          },
+          "paymentDetail": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaymentDetail"
+              }
+            ],
+            "nullable": true
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "normal",
+              "alta"
+            ]
+          },
+          "targetMinutes": {
+            "type": "integer",
+            "description": "Tiempo objetivo de cocina: plato más lento + 1 min por porción adicional (máx. +10)."
+          },
+          "dueAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "receipt": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Receipt"
+              }
+            ],
+            "nullable": true
+          },
+          "delivery": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Delivery"
+              }
+            ],
+            "nullable": true
+          }
+        }
+      },
+      "OrderItem": {
+        "type": "object",
+        "required": [
+          "productId",
+          "name",
+          "quantity",
+          "unitPrice"
+        ],
+        "properties": {
+          "productId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "unitPrice": {
+            "type": "number",
+            "description": "Precio unitario en soles (PEN) al registrar el pedido."
+          }
+        }
+      },
+      "HistoryEntry": {
+        "type": "object",
+        "required": [
+          "status",
+          "at"
+        ],
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/OrderStatus"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "SiteState": {
+        "type": "object",
+        "required": [
+          "cash",
+          "channels",
+          "couriers",
+          "events",
+          "orders",
+          "products",
+          "reservationEvents",
+          "reservations",
+          "siteId",
+          "sites",
+          "stock",
+          "tables"
+        ],
+        "properties": {
+          "sites": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Site"
+            }
+          },
+          "products": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Product"
+            }
+          },
+          "orders": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Order"
+            }
+          },
+          "stock": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StockItem"
+            }
+          },
+          "siteId": {
+            "$ref": "#/components/schemas/SiteId"
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrderEvent"
+            }
+          },
+          "tables": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Table"
+            }
+          },
+          "reservations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Reservation"
+            }
+          },
+          "reservationEvents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReservationEvent"
+            }
+          },
+          "channels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Channel"
+            }
+          },
+          "paymentMethods": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "couriers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Courier"
+            }
+          },
+          "cash": {
+            "$ref": "#/components/schemas/CashSummary"
+          }
+        }
+      },
+      "Site": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "deliveryZones"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/SiteId"
+          },
+          "name": {
+            "type": "string"
+          },
+          "deliveryZones": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "Miraflores",
+              "Barranco"
+            ]
+          }
+        }
+      },
+      "Product": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description",
+          "category",
+          "image",
+          "price",
+          "available",
+          "recipe"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "Fondos",
+              "Entradas",
+              "Bebidas",
+              "Postres"
+            ]
+          },
+          "image": {
+            "type": "string",
+            "description": "Identificador de la imagen del plato.",
+            "example": "lomo-saltado"
+          },
+          "price": {
+            "type": "number",
+            "description": "Precio en soles (PEN) para la sede consultada."
+          },
+          "available": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Porciones disponibles según la receta y las existencias sin reservar."
+          },
+          "recipe": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecipeItem"
+            }
+          },
+          "active": {
+            "type": "boolean",
+            "description": "false si el plato fue retirado de la carta de la sede."
+          },
+          "prepMinutes": {
+            "type": "integer"
+          }
+        }
+      },
+      "RecipeItem": {
+        "type": "object",
+        "required": [
+          "name",
+          "quantity",
+          "unit"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Cantidad de ingrediente por porción."
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "g",
+              "ml"
+            ]
+          }
+        }
+      },
+      "StockItem": {
+        "type": "object",
+        "required": [
+          "name",
+          "quantity",
+          "reserved",
+          "unit"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Existencia física de prueba, incluidas las cantidades ya reservadas."
+          },
+          "reserved": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Cantidad comprometida para pedidos aún en preparación o por preparar."
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "g",
+              "ml"
+            ]
+          }
+        }
+      },
+      "OrderEvent": {
+        "type": "object",
+        "required": [
+          "type",
+          "subject",
+          "at"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "PagoRegistrado",
+            "description": "PedidoRegistrado, PedidoEnPreparacion, PedidoListo, PedidoEnCamino, PedidoCerrado, PagoRegistrado, ComprobanteEmitido, RepartidorAsignado, WebhookDuplicadoIgnorado, PedidoRechazadoPorConector, PrecioActualizado, PlatoRetirado, PlatoActivado o CajaCerrada."
+          },
+          "subject": {
+            "type": "string",
+            "description": "Pedido, plato, cierre de caja o referencia del agregador."
+          },
+          "orderId": {
+            "type": "string",
+            "nullable": true
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": [
+          "error",
+          "code"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Mensaje para mostrar al usuario."
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "VALIDATION",
+              "PAYMENT",
+              "ORIGIN",
+              "RESET_LOCAL",
+              "NOT_FOUND",
+              "STOCK",
+              "COVERAGE",
+              "TRANSITION",
+              "CODE",
+              "RECEIPT_PENDING",
+              "INTERNAL",
+              "INACTIVE",
+              "CASH_SHORT",
+              "ALREADY_PAID",
+              "OPEN_TABS",
+              "NOTHING_TO_CLOSE",
+              "COURIER_BUSY",
+              "CAPACITY",
+              "SLOT_TAKEN"
+            ]
+          },
+          "details": {
+            "type": "object",
+            "description": "Datos adicionales según el error. STOCK incluye productIds e ingredients, COVERAGE incluye deliveryZones y TRANSITION incluye status y nextStatus.",
+            "properties": {
+              "productIds": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "ingredients": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "deliveryZones": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "status": {
+                "$ref": "#/components/schemas/OrderStatus"
+              },
+              "nextStatus": {
+                "type": "string",
+                "nullable": true,
+                "enum": [
+                  "preparacion",
+                  "listo",
+                  "en_camino",
+                  "entregado",
+                  null
+                ]
+              }
+            }
+          }
+        }
+      },
+      "ReservationId": {
+        "type": "string",
+        "pattern": "^RS-[0-9]{4,}$",
+        "example": "RS-1001",
+        "description": "Número público de la reserva."
+      },
+      "ReservationStatus": {
+        "type": "string",
+        "enum": [
+          "registrada",
+          "confirmada",
+          "en_curso",
+          "completada",
+          "cancelada",
+          "no_presento"
+        ],
+        "description": "Estado de la reserva. El flujo válido es registrada → confirmada → en_curso → completada; cancelada y no_presento son salidas."
+      },
+      "Table": {
+        "type": "object",
+        "required": [
+          "label",
+          "seats"
+        ],
+        "properties": {
+          "label": {
+            "type": "string",
+            "example": "Mesa 03"
+          },
+          "seats": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 4
+          }
+        }
+      },
+      "ReservationInput": {
+        "type": "object",
+        "required": [
+          "siteId",
+          "table",
+          "customer",
+          "phone",
+          "people",
+          "slot",
+          "date"
+        ],
+        "properties": {
+          "siteId": {
+            "$ref": "#/components/schemas/SiteId"
+          },
+          "table": {
+            "type": "string",
+            "example": "Mesa 03"
+          },
+          "customer": {
+            "type": "string",
+            "maxLength": 80,
+            "example": "Lucía Quispe"
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 32,
+            "example": "987 654 321"
+          },
+          "people": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 20,
+            "example": 4
+          },
+          "slot": {
+            "type": "string",
+            "example": "20:00"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "example": "2026-11-23"
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 240,
+            "nullable": true
+          }
+        }
+      },
+      "ReservationUpdate": {
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/ReservationStatus"
+          }
+        }
+      },
+      "Reservation": {
+        "type": "object",
+        "required": [
+          "id",
+          "siteId",
+          "table",
+          "customer",
+          "phone",
+          "people",
+          "slot",
+          "service",
+          "date",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/ReservationId"
+          },
+          "siteId": {
+            "$ref": "#/components/schemas/SiteId"
+          },
+          "table": {
+            "type": "string"
+          },
+          "customer": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "people": {
+            "type": "integer"
+          },
+          "slot": {
+            "type": "string"
+          },
+          "service": {
+            "type": "string",
+            "enum": [
+              "almuerzo",
+              "cena"
+            ]
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ReservationStatus"
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ReservationResponse": {
+        "type": "object",
+        "required": [
+          "reservation"
+        ],
+        "properties": {
+          "reservation": {
+            "$ref": "#/components/schemas/Reservation"
+          }
+        }
+      },
+      "ReservationAgenda": {
+        "type": "object",
+        "required": [
+          "siteId",
+          "date",
+          "tables",
+          "slots",
+          "reservations"
+        ],
+        "properties": {
+          "siteId": {
+            "$ref": "#/components/schemas/SiteId"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "tables": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Table"
+            }
+          },
+          "slots": {
+            "type": "object",
+            "description": "Turnos de servicio disponibles por turno de día.",
+            "properties": {
+              "almuerzo": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "cena": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "reservations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Reservation"
+            }
+          }
+        }
+      },
+      "ReservationEvent": {
+        "type": "object",
+        "required": [
+          "type",
+          "reservationId",
+          "at"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "example": "ReservaConfirmada"
+          },
+          "reservationId": {
+            "$ref": "#/components/schemas/ReservationId"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ChannelId": {
+        "type": "string",
+        "enum": [
+          "salon",
+          "web",
+          "whatsapp",
+          "telefono",
+          "rappi",
+          "pedidosya"
+        ]
+      },
+      "PaymentMethod": {
+        "type": "string",
+        "enum": [
+          "efectivo",
+          "tarjeta",
+          "yape",
+          "plin",
+          "pasarela",
+          "agregador"
+        ]
+      },
+      "Fulfillment": {
+        "type": "string",
+        "enum": [
+          "salon",
+          "delivery",
+          "recojo"
+        ]
+      },
+      "Channel": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "type",
+          "commission",
+          "methods"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/ChannelId"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "propio",
+              "agregador"
+            ]
+          },
+          "commission": {
+            "type": "number",
+            "description": "Comisión ficticia del agregador, en porcentaje."
+          },
+          "methods": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PaymentMethod"
+            }
+          }
+        }
+      },
+      "ReceiptInput": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "boleta",
+              "factura"
+            ],
+            "default": "boleta"
+          },
+          "document": {
+            "type": "string",
+            "description": "DNI de 8 dígitos (boleta, obligatorio si supera S/ 700) o RUC de 11 dígitos que empieza en 10 o 20 (factura)."
+          },
+          "name": {
+            "type": "string",
+            "description": "Razón social, obligatoria en factura."
+          }
+        }
+      },
+      "Receipt": {
+        "type": "object",
+        "required": [
+          "type",
+          "code",
+          "issuedAt",
+          "sunatStatus"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "boleta",
+              "factura"
+            ]
+          },
+          "code": {
+            "type": "string",
+            "example": "B001-00000001",
+            "description": "Serie y correlativo único por serie."
+          },
+          "document": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "issuedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "sunatStatus": {
+            "type": "string",
+            "enum": [
+              "simulado"
+            ]
+          }
+        }
+      },
+      "PaymentDetail": {
+        "type": "object",
+        "required": [
+          "method",
+          "label",
+          "amount"
+        ],
+        "properties": {
+          "method": {
+            "$ref": "#/components/schemas/PaymentMethod"
+          },
+          "label": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "received": {
+            "type": "number",
+            "nullable": true
+          },
+          "change": {
+            "type": "number",
+            "nullable": true
+          },
+          "authCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Delivery": {
+        "type": "object",
+        "required": [
+          "courierId",
+          "courier",
+          "courierType",
+          "assignedAt"
+        ],
+        "properties": {
+          "courierId": {
+            "type": "string"
+          },
+          "courier": {
+            "type": "string"
+          },
+          "courierType": {
+            "type": "string",
+            "enum": [
+              "propio",
+              "agregador"
+            ]
+          },
+          "assignedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deliveredAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
+      "Courier": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "propio",
+              "agregador"
+            ]
+          },
+          "channel": {
+            "type": "string",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          },
+          "busy": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CashClosure": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "CJ-1001"
+          },
+          "closedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "payments": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "number"
+          },
+          "expectedCash": {
+            "type": "number"
+          },
+          "countedCash": {
+            "type": "number"
+          },
+          "difference": {
+            "type": "number"
+          },
+          "byMethod": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "CashSummary": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "number"
+          },
+          "expectedCash": {
+            "type": "number"
+          },
+          "byMethod": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "payments": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "closures": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CashClosure"
+            }
+          }
+        }
+      },
+      "Metrics": {
+        "type": "object",
+        "description": "Indicadores del día para BI (mejora M7) frente a OE1–OE3 de la Tabla 7.",
+        "properties": {
+          "goals": {
+            "type": "object"
+          },
+          "orders": {
+            "type": "object"
+          },
+          "kitchen": {
+            "type": "object"
+          },
+          "delivery": {
+            "type": "object"
+          },
+          "payments": {
+            "type": "object"
+          },
+          "reservations": {
+            "type": "object"
+          },
+          "byChannel": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "siteId": {
+            "$ref": "#/components/schemas/SiteId"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      }
+    },
+    "responses": {
+      "Ok": {
+        "description": "Operación completada.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": [
+                "ok"
+              ],
+              "properties": {
+                "ok": {
+                  "type": "boolean",
+                  "enum": [
+                    true
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "ValidationError": {
+        "description": "VALIDATION. Parámetros o contenido de la solicitud inválidos.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "OriginError": {
+        "description": "ORIGIN. El origen web de la solicitud difiere del origen del servidor de la demo.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "PayloadError": {
+        "description": "VALIDATION. El cuerpo JSON supera el límite de 64 KB.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "MediaTypeError": {
+        "description": "VALIDATION. Envía el cuerpo con Content-Type application/json.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "OrderNotFound": {
+        "description": "NOT_FOUND. No existe el pedido indicado.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "InternalError": {
+        "description": "INTERNAL. El servidor no pudo completar la operación.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "ReservationNotFound": {
+        "description": "NOT_FOUND. La reserva no existe.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+node_modules/
+dist/
+data/
+
+# Material de referencia de terceros y configuración local: no se publica.
+public/video/
+.env.local
+.env.*.local
+
+# Respaldos locales del diseño.
+.backup-antes-central/
+.backup-minimax/
+.design-backup-original/
+
+.DS_Store

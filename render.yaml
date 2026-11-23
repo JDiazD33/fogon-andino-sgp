@@ -1,0 +1,34 @@
+# Despliegue del prototipo en Render (plan gratis): un servicio web con la API
+# de NestJS y la PWA compilada, y una base PostgreSQL dedicada a la demo.
+# En Render: New → Blueprint → este repositorio.
+services:
+  - type: web
+    name: fogon-andino
+    runtime: node
+    plan: free
+    region: virginia
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: node server.mjs
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      # En producción la API no permite reiniciar los datos de la demo.
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: fogon-andino-db
+          property: connectionString
+
+databases:
+  - name: fogon-andino-db
+    plan: free
+    region: virginia
+    databaseName: fogon
+    user: fogon
+    postgresMajorVersion: "17"
+    # Solo el servicio web de Render puede conectarse; nada desde internet.
+    ipAllowList: []
