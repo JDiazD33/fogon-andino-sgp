@@ -306,7 +306,7 @@ function Checkout({ order, refresh, onDone }) {
     <div className="ops-fields">
       <label className="field"><span>{type === 'factura' ? 'RUC' : 'DNI (opcional)'}</span>
         <input value={document} onChange={event => setDocument(event.target.value.replace(/[^0-9]/g, ''))} inputMode="numeric"
-          maxLength={type === 'factura' ? 11 : 8} required={type === 'factura'} placeholder={type === 'factura' ? '20601234567' : '12345678'} />
+          maxLength={type === 'factura' ? 11 : 8} required={type === 'factura'} placeholder={type === 'factura' ? '20999888771' : '12345678'} />
       </label>
       {type === 'factura' && <label className="field"><span>Razón social</span>
         <input value={name} onChange={event => setName(event.target.value)} maxLength={100} required placeholder="Empresa S.A.C." />

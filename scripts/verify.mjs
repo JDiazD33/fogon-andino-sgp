@@ -157,7 +157,7 @@ async function main() {
   check('efectivo insuficiente rechazado (409 CASH_SHORT)', result.status === 409);
   result = await call('POST', `/api/orders/${tab.id}/payment`, { method: 'tarjeta', receipt: { type: 'factura', document: '123', name: 'X' } });
   check('factura sin RUC válido rechazada (400)', result.status === 400);
-  result = await call('POST', `/api/orders/${tab.id}/payment`, { method: 'efectivo', received: 50, receipt: { type: 'factura', document: '20601234567', name: 'Consultora Andina S.A.C.' } });
+  result = await call('POST', `/api/orders/${tab.id}/payment`, { method: 'efectivo', received: 50, receipt: { type: 'factura', document: '20999888771', name: 'Consultora Andina S.A.C.' } });
   const paidTab = result.data.order;
   check('cobro en efectivo con vuelto y factura F001', result.status === 201 && paidTab.paymentDetail.change === 5.5 && /^F001-/.test(paidTab.reference));
   result = await call('POST', `/api/orders/${tab.id}/payment`, { method: 'tarjeta' });
