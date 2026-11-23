@@ -1,20 +1,34 @@
 /* Verificación de las reglas de negocio del SGP v2 contra la demo en marcha.
    Uso: con `npm run demo` activo, en otra terminal ejecuta `npm run verify`.
-   Reinicia los datos de prueba al empezar y al terminar. */
+   Reinicia los datos de prueba al empezar y al terminar, así que borra los
+   pedidos que haya. En un despliegue con NODE_ENV=production el reinicio exige
+   la cabecera x-reset-token: pásala con RESET_TOKEN=… FOGON_URL=… npm run verify.
+   Si el reinicio no responde 200, el script se detiene sin probar nada. */
 
 const base = process.env.FOGON_URL ?? 'http://127.0.0.1:4173';
 let passed = 0;
 let failed = 0;
 
 async function call(method, path, body) {
+  const headers = body === undefined ? {} : { 'Content-Type': 'application/json' };
+  if (path === '/api/reset' && process.env.RESET_TOKEN) headers['x-reset-token'] = process.env.RESET_TOKEN;
   const response = await fetch(base + path, {
     method,
-    headers: body === undefined ? {} : { 'Content-Type': 'application/json' },
+    headers,
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   const type = response.headers.get('content-type') ?? '';
   const data = type.includes('json') ? await response.json() : await response.arrayBuffer();
   return { status: response.status, data, type };
+}
+
+async function reset() {
+  const result = await call('POST', '/api/reset', {});
+  if (result.status !== 200) {
+    const reason = result.data?.error ?? `HTTP ${result.status}`;
+    throw new Error(`No se pudieron reiniciar los datos de prueba (${result.status}: ${reason}). `
+      + 'En producción define RESET_TOKEN con el valor del panel del servidor. Se detiene la verificación.');
+  }
 }
 
 function check(name, condition, detail = '') {
@@ -43,7 +57,7 @@ async function main() {
   const health = await call('GET', '/api/health');
   if (health.status !== 200) throw new Error(`La demo no responde en ${base}. Ejecuta npm run demo primero.`);
   console.log(`Demo en ${base} · PostgreSQL ${health.data.databaseVersion}`);
-  await call('POST', '/api/reset', {});
+  await reset();
 
   section('Carta y precios por sede');
   let state = (await call('GET', `/api/state?site=${site}`)).data;
@@ -187,7 +201,7 @@ async function main() {
   check('comisión del agregador calculada', metrics.byChannel.find((c) => c.id === 'rappi').commissionCost === 12.15);
   check('tiempo de preparación medido', metrics.kitchen.ready >= 3 && metrics.kitchen.onTimePct !== null);
 
-  await call('POST', '/api/reset', {});
+  await reset();
   console.log(`\n${passed} comprobaciones correctas, ${failed} fallidas.`);
   process.exitCode = failed ? 1 : 0;
 }

@@ -61,6 +61,21 @@ Si el comando devuelve `192.168.1.42`, abre `http://192.168.1.42:4173/#carta` en
 
 El modo `HOST=0.0.0.0` permite acceder desde la red y las vistas de la demo están abiertas a los equipos que lleguen al servidor. Úsalo solo en una red privada de confianza, con datos ficticios. Al terminar, detén el servidor y vuelve al arranque local si necesitas seguir ensayando.
 
+## Versión publicada en Render
+
+La demo está publicada en **[https://fogon-andino.onrender.com](https://fogon-andino.onrender.com)** con el plan gratis de Render. `render.yaml` define el servicio web, que compila con `npm ci --include=dev && npm run build` y arranca con `node server.mjs`, y una base PostgreSQL dedicada a la demo. Cada `git push` a `main` del repositorio privado `JDiazD33/fogon-andino-sgp` la vuelve a desplegar.
+
+- **La primera visita tarda.** El plan gratis apaga el servicio tras 15 minutos sin visitas y la primera carga demora cerca de un minuto: ábrelo un rato antes de exponer. La base gratuita vence a los 30 días de creada.
+- **Sin los videos de Central.** La versión publicada muestra fotos propias del proyecto. Los videos de `public/video/` solo se ven en la copia local, porque `.env.local`, que no se sube al repositorio, define `VITE_VIDEOS_REFERENCIA=1`.
+- **El QR del comprobante funciona desde cualquier celular.** En la nube, el QR de cada boleta o factura abre el seguimiento del pedido en esa misma dirección.
+- **El reinicio de datos está protegido.** En la nube, `POST /api/reset` exige la cabecera `x-reset-token` con el valor de `RESET_TOKEN`, que Render generó y se ve en el servicio **fogon-andino → Environment**. Para dejar la demo limpia antes de exponer:
+
+  ```sh
+  curl -X POST -H "Content-Type: application/json" -H "x-reset-token: VALOR_DE_RESET_TOKEN" -d "{}" https://fogon-andino.onrender.com/api/reset
+  ```
+
+  `RESET_TOKEN=… FOGON_URL=https://fogon-andino.onrender.com npm run verify` corre las pruebas contra la nube, pero borra los pedidos que haya.
+
 ## Guion de demostración
 
 Ensaya primero con los datos reiniciados. El recorrido completo toma unos ocho minutos; los pasos 1, 2, 4 y 5 bastan para una versión corta de cuatro minutos.

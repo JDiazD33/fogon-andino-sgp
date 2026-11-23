@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { randomInt } from 'node:crypto';
+import { randomInt, timingSafeEqual } from 'node:crypto';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
@@ -1564,9 +1564,15 @@ class FogonController {
   }
 
   reset(request) {
-    // En la nube (NODE_ENV=production) nadie puede borrar los datos desde internet.
+    // En la nube (NODE_ENV=production) solo reinicia quien tenga el secreto
+    // RESET_TOKEN, enviado en la cabecera x-reset-token. Sin secreto, nadie.
     if (process.env.NODE_ENV === 'production') {
-      throw new ApiError(403, 'RESET_LOCAL', 'El reinicio de datos solo está disponible en la demo local.');
+      const expected = Buffer.from(process.env.RESET_TOKEN ?? '');
+      const given = Buffer.from(String(request.headers['x-reset-token'] ?? ''));
+      if (!expected.length || given.length !== expected.length || !timingSafeEqual(given, expected)) {
+        throw new ApiError(403, 'RESET_LOCAL', 'El reinicio de datos de la versión publicada requiere el token de la demo.');
+      }
+      return this.store.reset();
     }
     const loopback = ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(request.socket.remoteAddress);
     if (!loopback) throw new ApiError(403, 'RESET_LOCAL', 'Reinicia los datos desde la computadora anfitriona.');
