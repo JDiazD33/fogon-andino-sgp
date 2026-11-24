@@ -2,8 +2,7 @@ node_modules/
 dist/
 data/
 
-# Material de referencia de terceros y configuración local: no se publica.
-public/video/
+# Configuración local.
 .env.local
 .env.*.local
 

@@ -66,7 +66,7 @@ El modo `HOST=0.0.0.0` permite acceder desde la red y las vistas de la demo est�
 La demo está publicada en **[https://fogon-andino.onrender.com](https://fogon-andino.onrender.com)** con el plan gratis de Render. `render.yaml` define el servicio web, que compila con `npm ci --include=dev && npm run build` y arranca con `node server.mjs`, y una base PostgreSQL dedicada a la demo. Cada `git push` a `main` del repositorio privado `JDiazD33/fogon-andino-sgp` la vuelve a desplegar.
 
 - **La primera visita tarda.** El plan gratis apaga el servicio tras 15 minutos sin visitas y la primera carga demora cerca de un minuto: ábrelo un rato antes de exponer. La base gratuita vence a los 30 días de creada.
-- **Sin los videos de Central.** La versión publicada muestra fotos propias del proyecto. Los videos de `public/video/` solo se ven en la copia local, porque `.env.local`, que no se sube al repositorio, define `VITE_VIDEOS_REFERENCIA=1`.
+- **Igual que la versión local.** La versión publicada lleva los mismos videos de referencia de `public/video/`: `render.yaml` define `VITE_VIDEOS_REFERENCIA=1` al compilar, como `.env.local` en la computadora. Es una demo para el profesor: la página pide a los buscadores que no la indexen (`robots.txt` y la etiqueta `robots`).
 - **El QR del comprobante funciona desde cualquier celular.** En la nube, el QR de cada boleta o factura abre el seguimiento del pedido en esa misma dirección.
 - **El reinicio de datos está protegido.** En la nube, `POST /api/reset` exige la cabecera `x-reset-token` con el valor de `RESET_TOKEN`, que Render generó y se ve en el servicio **fogon-andino → Environment**. Para dejar la demo limpia antes de exponer:
 
@@ -168,7 +168,7 @@ El rediseño es íntegramente de presentación: no alteró la API, el modelo de 
 
 ### Videos de la portada
 
-Los cuatro videos de `public/video/` (y sus pósteres `.jpg`) se copiaron de `videos-central-referencia/`: son material de **Central Restaurante**, usado solo como referencia visual provisional en este prototipo académico. Antes de publicar la página fuera del aula hay que reemplazarlos por material propio. La portada usa los videos 1 y 2; el recorrido, los videos 3 y 4. Los videos 5 y 6 quedaron solo en `videos-central-referencia/`: la portada ya no tiene cierre y termina en la carta. Cada video se reproduce sin sonido y solo mientras está a la vista; con «reducir movimiento» activado queda el póster fijo.
+Los cuatro videos de `public/video/` (y sus pósteres `.jpg`) se copiaron de `videos-central-referencia/`: son material de **Central Restaurante**, usado solo como referencia visual provisional en este prototipo académico. La versión de Render los incluye para mostrarla al profesor; si la página se usara fuera del curso, habría que reemplazarlos por material propio. Sin `VITE_VIDEOS_REFERENCIA=1`, la portada muestra fotos propias del proyecto. La portada usa los videos 1 y 2; el recorrido, los videos 3 y 4. Los videos 5 y 6 quedaron solo en `videos-central-referencia/`: la portada ya no tiene cierre y termina en la carta. Cada video se reproduce sin sonido y solo mientras está a la vista; con «reducir movimiento» activado queda el póster fijo.
 
 ### Fotos de la carta
 
