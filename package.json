@@ -10,7 +10,8 @@
     "build": "vite build",
     "start": "node server.mjs",
     "demo": "node scripts/demo.mjs",
-    "verify": "node scripts/verify.mjs"
+    "verify": "node scripts/verify.mjs",
+    "carta": "node scripts/carta.mjs"
   },
   "dependencies": {
     "@fontsource-variable/big-shoulders-display": "^5.3.0",

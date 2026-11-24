@@ -178,6 +178,19 @@ serif, puntos guía hasta el precio, descripción en serif y un enlace «Agregar
 que se convierte en contador (− n +). El agotado se marca con texto y la foto
 pasa a gris.
 
+La carta tiene 60 platos y abre en «Fondos»: con todos juntos la lista sería muy
+larga. Cada plato muestra su propia foto WebP (`public/img/platos/<categoría>/`),
+recortada al cuadrado y con carga diferida, para que solo bajen las que están a
+la vista.
+
+### Existencias (Cocina)
+
+Los 80 insumos se agrupan por tipo, con un subtítulo en cursiva y el número de
+insumos de cada grupo. Cada fila muestra lo físico, lo libre, lo reservado y el
+stock mínimo; la barra separa lo libre de lo reservado. Si lo libre baja del
+mínimo, la fila cambia el dato físico por «Reponer» en latón (o «Agotado» en
+brasa) y un aviso arriba lista lo que hay que reponer.
+
 ### Bloques plegables
 
 Lo secundario de una vista queda a un clic con `<details className="fold">`:
@@ -265,9 +278,7 @@ capacidad de sala y la comanda.
 | `package.json` | Se añadieron `@fontsource-variable/newsreader` y `@fontsource-variable/big-shoulders-display` |
 
 La revisión «papel» no tocó la lógica de negocio, los contratos de la API, el
-modelo de datos ni la boleta en PDF. Los archivos de diseño originales quedaron
-en `.design-backup-original/` y la versión previa a esta revisión, en
-`.backup-antes-central/`.
+modelo de datos ni la boleta en PDF.
 
 ## 7. Referencias
 

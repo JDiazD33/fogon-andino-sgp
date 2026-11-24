@@ -15,20 +15,35 @@ function measure(quantity, unit) {
 function StockRow({ item }) {
   const available = item.quantity - item.reserved
   const reservedShare = item.quantity ? item.reserved / item.quantity * 100 : 0
+  // Por debajo del stock mínimo la cocina debe reponer; en cero, el insumo está agotado.
+  const level = available <= 0 ? 'agotado' : available < item.minimum ? 'bajo' : null
 
-  return <li className="inventory-stock-row">
+  return <li className="inventory-stock-row" data-level={level ?? undefined}>
     <div className="inventory-stock-label">
       <strong>{item.name}</strong>
-      <span>{measure(item.quantity, item.unit)} físicos</span>
+      {level ? <em className="inventory-flag">{level === 'agotado' ? 'Agotado' : 'Reponer'}</em>
+        : <span>{measure(item.quantity, item.unit)} físicos</span>}
     </div>
     <div className="inventory-stock-bar" aria-hidden="true" data-empty={item.quantity === 0}>
       <span style={{ width: `${reservedShare}%` }} />
     </div>
     <div className="inventory-stock-values">
       <span>Libre <strong>{measure(available, item.unit)}</strong></span>
-      <span>Reservado <strong>{measure(item.reserved, item.unit)}</strong></span>
+      <span>Reservado {measure(item.reserved, item.unit)}</span>
+      <span>Mínimo {measure(item.minimum ?? 0, item.unit)}</span>
     </div>
   </li>
+}
+
+// Agrupa los insumos por tipo, en el orden en que llegan de la API.
+function groupStock(stock) {
+  const groups = new Map()
+  for (const item of stock) {
+    const name = item.category ?? 'Insumos'
+    if (!groups.has(name)) groups.set(name, [])
+    groups.get(name).push(item)
+  }
+  return [...groups]
 }
 
 export default function Inventory({ state }) {
@@ -46,6 +61,7 @@ export default function Inventory({ state }) {
     return { ...item, required, available, deficit: Math.max(0, required - available) }
   })
   const hasShortage = validQuantity && requiredIngredients.some(item => item.deficit > 0)
+  const toRestock = state.stock.filter(item => item.quantity - item.reserved < (item.minimum ?? 0))
 
   return <section className="fogon-inventory" aria-labelledby="inventory-title">
     <header className="inventory-heading">
@@ -56,13 +72,23 @@ export default function Inventory({ state }) {
     <div className="inventory-layout">
       <section aria-labelledby="inventory-stock-title">
         <h3 id="inventory-stock-title">Stock de insumos</h3>
-        <p className="inventory-caption">Cada barra reparte el stock físico de un insumo entre lo libre y lo reservado.</p>
+        <p className="inventory-caption">
+          {state.stock.length} insumos por tipo. Cada barra reparte el stock físico entre lo libre y lo reservado;
+          por debajo del mínimo, el insumo se marca para reponer.
+        </p>
         <div className="inventory-legend" aria-hidden="true">
           <span><i />Libre</span><span><i />Reservado para pedidos</span>
         </div>
-        <ul className="inventory-stock-list">
-          {state.stock.map(item => <StockRow key={item.name} item={item} />)}
-        </ul>
+        {toRestock.length > 0 && <p className="inventory-restock" role="status">
+          <strong>Reponer ({toRestock.length}):</strong> {toRestock.map(item => item.name).join(', ')}
+        </p>}
+        {groupStock(state.stock).map(([group, items]) => <section className="inventory-group" key={group}
+          aria-label={group}>
+          <h4>{group}<span>{items.length}</span></h4>
+          <ul className="inventory-stock-list">
+            {items.map(item => <StockRow key={item.name} item={item} />)}
+          </ul>
+        </section>)}
       </section>
 
       <section className="inventory-calculator" aria-labelledby="inventory-recipe-title">

@@ -46,8 +46,12 @@ function section(title) {
 }
 
 const site = 'miraflores';
-const lomo = { productId: 'lomo-saltado', quantity: 1 };
-const chicha = { productId: 'chicha-morada', quantity: 1 };
+// Platos de la carta usados en las pruebas (precios y recetas salen de la API).
+const lomo = { productId: 'tacu-tacu-con-lomo', quantity: 1 };
+const chicha = { productId: 'chicha-de-jora', quantity: 1 };
+const retirado = 'picarones';
+const agotadoMiraflores = 'trucha-frita';
+const deAgregador = 'pollo-a-la-brasa';
 
 async function advance(id, status, extra = {}) {
   return call('PATCH', `/api/orders/${id}`, { status, ...extra });
@@ -62,15 +66,23 @@ async function main() {
   section('Carta y precios por sede');
   let state = (await call('GET', `/api/state?site=${site}`)).data;
   check('seis canales de venta registrados', state.channels.length === 6, state.channels.map((c) => c.id).join(','));
-  check('la causa limeña figura agotada en Miraflores', state.products.find((p) => p.id === 'causa-limena').available === 0);
-  let result = await call('PATCH', `/api/sites/${site}/products/suspiro-limeno`, { active: false });
+  const initial = state;
+  const productOf = (id) => initial.products.find((p) => p.id === id);
+  const stockOf = (current, name) => current.stock.find((s) => s.name === name).quantity;
+  check('la carta tiene 60 platos, cada uno con su imagen .webp', initial.products.length === 60
+    && initial.products.every((p) => /^\/img\/platos\/(fondos|entradas|bebidas|postres)\/[a-z0-9-]+\.webp$/.test(p.image)), String(initial.products.length));
+  check('80 insumos con tipo y stock mínimo', initial.stock.length === 80
+    && initial.stock.every((s) => s.category && Number.isInteger(s.minimum)), String(initial.stock.length));
+  check('la trucha frita figura agotada en Miraflores', productOf(agotadoMiraflores).available === 0);
+  check('la trucha andina queda marcada bajo el mínimo', stockOf(initial, 'Trucha andina') < initial.stock.find((s) => s.name === 'Trucha andina').minimum);
+  let result = await call('PATCH', `/api/sites/${site}/products/${retirado}`, { active: false });
   check('retirar un plato de la carta de la sede', result.status === 200 && result.data.product.active === false);
-  result = await call('POST', '/api/orders', { siteId: site, channel: 'web', zone: 'Miraflores', payment: 'approved', items: [{ productId: 'suspiro-limeno', quantity: 1 }] });
+  result = await call('POST', '/api/orders', { siteId: site, channel: 'web', zone: 'Miraflores', payment: 'approved', items: [{ productId: retirado, quantity: 1 }] });
   check('un plato retirado no se puede pedir (409 INACTIVE)', result.status === 409 && result.data.code === 'INACTIVE');
-  await call('PATCH', `/api/sites/${site}/products/suspiro-limeno`, { active: true, price: 13 });
+  await call('PATCH', `/api/sites/${site}/products/${retirado}`, { active: true, price: 13 });
   state = (await call('GET', `/api/state?site=${site}`)).data;
-  check('el precio actualizado rige solo en la sede', state.products.find((p) => p.id === 'suspiro-limeno').price === 13);
-  result = await call('PATCH', `/api/sites/${site}/products/suspiro-limeno`, { price: 0.5 });
+  check('el precio actualizado rige solo en la sede', state.products.find((p) => p.id === retirado).price === 13);
+  result = await call('PATCH', `/api/sites/${site}/products/${retirado}`, { price: 0.5 });
   check('precio fuera de rango rechazado (400)', result.status === 400);
 
   section('Gestor único de pedidos (OMS) · canales propios');
@@ -78,7 +90,7 @@ async function main() {
   const web = result.data.order;
   check('pedido web registrado y cobrado por pasarela', result.status === 201 && web.payment === 'approved' && web.paymentMethod === 'pasarela');
   check('el cobro emite la boleta B001 con correlativo', /^B001-\d{8}$/.test(web.reference ?? ''), web.reference);
-  check('el KDS recibe tiempo objetivo y prioridad', web.targetMinutes === 14 && web.priority === 'normal');
+  check('el KDS recibe tiempo objetivo y prioridad', web.targetMinutes === productOf(lomo.productId).prepMinutes && web.priority === 'normal');
   result = await call('POST', '/api/orders', { siteId: site, channel: 'web', zone: 'Lince', payment: 'approved', items: [lomo] });
   check('zona fuera de cobertura rechazada (422 COVERAGE)', result.status === 422 && result.data.code === 'COVERAGE');
   result = await call('POST', '/api/orders', { siteId: site, channel: 'web', zone: 'Miraflores', payment: 'declined', items: [lomo] });
@@ -99,19 +111,19 @@ async function main() {
   section('Hub de integración · conectores de agregadores');
   const rappi = {
     order_id: 'RP-77120', store_id: 'fogon-miraflores',
-    items: [{ sku: 'aji-de-gallina', units: 1 }, { sku: 'chicha-morada', units: 2 }],
+    items: [{ sku: deAgregador, units: 1 }, { sku: chicha.productId, units: 2 }],
     client: { name: 'Valeria Núñez', phone: '944 120 300' }, delivery: { neighborhood: 'Barranco' },
   };
   result = await call('POST', '/api/connectors/rappi/orders', rappi);
   const fromRappi = result.data.order;
   check('el conector de Rappi traduce su formato al OMS (201)', result.status === 201 && fromRappi.channel === 'rappi' && fromRappi.externalRef === 'RP-77120');
   check('pedido de agregador con prioridad alta', fromRappi.priority === 'alta');
-  check('el precio sale de la carta única, no del agregador', fromRappi.total === 29 + 8 * 2, String(fromRappi.total));
+  check('el precio sale de la carta única, no del agregador', fromRappi.total === productOf(deAgregador).price + productOf(chicha.productId).price * 2, String(fromRappi.total));
   result = await call('POST', '/api/connectors/rappi/orders', rappi);
   check('webhook repetido no duplica el pedido (200, duplicate)', result.status === 200 && result.data.duplicate && result.data.order.id === fromRappi.id);
   result = await call('POST', '/api/connectors/pedidosya/orders', {
     id: 551203, restaurant: { integrationCode: 'miraflores' },
-    details: [{ integrationCode: 'arroz-con-pollo', quantity: 1 }],
+    details: [{ integrationCode: 'chaufa-de-pollo', quantity: 1 }],
     user: { name: 'Mateo Ríos', phone: '933 400 100' }, address: { area: 'Miraflores' },
   });
   const fromPedidosYa = result.data.order;
@@ -131,7 +143,8 @@ async function main() {
   check('al marcar listo se genera el código de entrega', result.status === 200 && /^\d{4}$/.test(result.data.order.code ?? ''));
   const code = result.data.order.code;
   state = (await call('GET', `/api/state?site=${site}`)).data;
-  check('el stock de res se descontó por receta', state.stock.find((s) => s.name === 'Lomo de res').quantity === 1800 - 180);
+  const lomoPorPorcion = productOf(lomo.productId).recipe.find((r) => r.name === 'Lomo fino de res').quantity;
+  check('el stock de lomo se descontó por receta', stockOf(state, 'Lomo fino de res') === stockOf(initial, 'Lomo fino de res') - lomoPorPorcion);
 
   section('Delivery y despacho');
   result = await advance(web.id, 'en_camino');
@@ -171,16 +184,18 @@ async function main() {
   check('efectivo insuficiente rechazado (409 CASH_SHORT)', result.status === 409);
   result = await call('POST', `/api/orders/${tab.id}/payment`, { method: 'tarjeta', receipt: { type: 'factura', document: '123', name: 'X' } });
   check('factura sin RUC válido rechazada (400)', result.status === 400);
-  result = await call('POST', `/api/orders/${tab.id}/payment`, { method: 'efectivo', received: 50, receipt: { type: 'factura', document: '20999888771', name: 'Consultora Andina S.A.C.' } });
+  const tabTotal = productOf(lomo.productId).price + productOf(chicha.productId).price;
+  const received = Math.ceil(tabTotal / 10) * 10 + 10;
+  result = await call('POST', `/api/orders/${tab.id}/payment`, { method: 'efectivo', received, receipt: { type: 'factura', document: '20999888771', name: 'Consultora Andina S.A.C.' } });
   const paidTab = result.data.order;
-  check('cobro en efectivo con vuelto y factura F001', result.status === 201 && paidTab.paymentDetail.change === 5.5 && /^F001-/.test(paidTab.reference));
+  check('cobro en efectivo con vuelto y factura F001', result.status === 201 && paidTab.paymentDetail.change === received - tabTotal && /^F001-/.test(paidTab.reference));
   result = await call('POST', `/api/orders/${tab.id}/payment`, { method: 'tarjeta' });
   check('una cuenta no se cobra dos veces (409 ALREADY_PAID)', result.status === 409);
   result = await call('GET', `/api/orders/${tab.id}/receipt`);
   check('la factura se descarga en PDF', result.status === 200 && result.type.includes('pdf'));
   state = (await call('GET', `/api/state?site=${site}`)).data;
-  check('la caja suma el efectivo esperado del turno', state.cash.expectedCash === 44.5, String(state.cash.expectedCash));
-  result = await call('POST', '/api/cash-closures', { siteId: site, countedCash: 44 });
+  check('la caja suma el efectivo esperado del turno', state.cash.expectedCash === tabTotal, String(state.cash.expectedCash));
+  result = await call('POST', '/api/cash-closures', { siteId: site, countedCash: tabTotal - 0.5 });
   check('cierre de caja con diferencia registrada', result.status === 201 && result.data.closure.difference === -0.5);
   result = await call('POST', '/api/cash-closures', { siteId: site, countedCash: 0 });
   check('sin cobros nuevos no hay segundo cierre (409)', result.status === 409);
@@ -198,7 +213,7 @@ async function main() {
   check('indicadores por canal', metrics.byChannel.find((c) => c.id === 'rappi').orders === 1);
   check('duplicados bloqueados contabilizados', metrics.orders.duplicatesBlocked === 1);
   check('rechazos del conector contabilizados', metrics.orders.rejectedByConnector === 1);
-  check('comisión del agregador calculada', metrics.byChannel.find((c) => c.id === 'rappi').commissionCost === 12.15);
+  check('comisión del agregador calculada', metrics.byChannel.find((c) => c.id === 'rappi').commissionCost === Math.round(fromRappi.total * 27) / 100, String(metrics.byChannel.find((c) => c.id === 'rappi').commissionCost));
   check('tiempo de preparación medido', metrics.kitchen.ready >= 3 && metrics.kitchen.onTimePct !== null);
 
   await reset();

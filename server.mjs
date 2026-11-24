@@ -9,6 +9,7 @@ import {
 import { NestFactory } from '@nestjs/core';
 import pg from 'pg';
 import { buildReceipt } from './receipt.mjs';
+import { dishImage, ingredients, menu } from './catalog.mjs';
 
 const staticDir = resolve(dirname(fileURLToPath(import.meta.url)), 'dist');
 const host = process.env.HOST ?? '127.0.0.1';
@@ -16,7 +17,7 @@ const port = Number(process.env.PORT ?? 4173);
 
 /* Versión del esquema. Si la base guardada tiene otra versión, el esquema de la
    demo se vuelve a crear desde cero: todos los datos son ficticios. */
-const SCHEMA_VERSION = 3;
+const SCHEMA_VERSION = 4;
 
 const sites = [
   { id: 'miraflores', name: 'Miraflores', deliveryZones: ['Miraflores', 'Barranco'] },
@@ -44,52 +45,8 @@ const paymentMethods = {
   agregador: 'Cobrado por el agregador',
 };
 
-const menu = [
-  {
-    id: 'lomo-saltado', name: 'Lomo saltado', category: 'Fondos', prep: 14,
-    description: 'Lomo de res salteado al wok, papas doradas y arroz graneado.',
-    prices: [3650, 3900], recipe: { res: 180, papa: 180, arroz: 140 },
-  },
-  {
-    id: 'aji-de-gallina', name: 'Ají de gallina', category: 'Fondos', prep: 12,
-    description: 'Pollo deshilachado en crema de ají amarillo, con arroz y papa.',
-    prices: [2900, 3200], recipe: { pollo: 250, aji: 40, arroz: 140, papa: 100 },
-  },
-  {
-    id: 'arroz-con-pollo', name: 'Arroz con pollo', category: 'Fondos', prep: 12,
-    description: 'Arroz al culantro con pollo dorado y salsa criolla.',
-    prices: [2800, 3100], recipe: { arroz: 180, pollo: 250, culantro: 25 },
-  },
-  {
-    id: 'causa-limena', name: 'Causa limeña', category: 'Entradas', prep: 8,
-    description: 'Papa amarilla prensada con limón y ají, con un relleno de palta.',
-    prices: [1850, 2100], recipe: { papa_amarilla: 180, aji: 30, palta: 80 },
-  },
-  {
-    id: 'chicha-morada', name: 'Chicha morada', category: 'Bebidas', prep: 2,
-    description: 'Refresco de maíz morado, piña, canela y un toque de limón.',
-    prices: [800, 900], recipe: { chicha: 300 },
-  },
-  {
-    id: 'suspiro-limeno', name: 'Suspiro limeño', category: 'Postres', prep: 4,
-    description: 'Manjar cremoso con merengue y canela.',
-    prices: [1250, 1400], recipe: { manjar: 120, merengue: 50 },
-  },
-];
-
-const ingredients = [
-  { id: 'res', name: 'Lomo de res', unit: 'g', quantities: [1800, 2160] },
-  { id: 'pollo', name: 'Pollo', unit: 'g', quantities: [500, 3000] },
-  { id: 'arroz', name: 'Arroz', unit: 'g', quantities: [4200, 5600] },
-  { id: 'papa', name: 'Papa blanca', unit: 'g', quantities: [4000, 5000] },
-  { id: 'papa_amarilla', name: 'Papa amarilla', unit: 'g', quantities: [0, 1800] },
-  { id: 'aji', name: 'Ají amarillo', unit: 'g', quantities: [700, 950] },
-  { id: 'culantro', name: 'Culantro', unit: 'g', quantities: [500, 650] },
-  { id: 'palta', name: 'Palta', unit: 'g', quantities: [1200, 1500] },
-  { id: 'chicha', name: 'Chicha preparada', unit: 'ml', quantities: [6000, 7500] },
-  { id: 'manjar', name: 'Manjar', unit: 'g', quantities: [1800, 1920] },
-  { id: 'merengue', name: 'Merengue', unit: 'g', quantities: [750, 850] },
-];
+/* La carta (60 platos con receta por porción) y los 80 insumos de cocina, con
+   sus existencias y stock mínimo por sede, viven en catalog.mjs. */
 
 /* Repartidores (REPARTIDOR, Figura 11): propios por sede y los del agregador. */
 const couriers = [
@@ -200,7 +157,9 @@ const schema = `
   CREATE TABLE ingredients (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
-    unit TEXT NOT NULL
+    unit TEXT NOT NULL CHECK (unit IN ('g', 'ml')),
+    category TEXT NOT NULL,
+    sort_order INTEGER NOT NULL
   );
   CREATE TABLE recipes (
     product_id TEXT NOT NULL REFERENCES products,
@@ -213,6 +172,8 @@ const schema = `
     ingredient_id TEXT NOT NULL REFERENCES ingredients,
     quantity INTEGER NOT NULL CHECK (quantity >= 0),
     reserved INTEGER NOT NULL DEFAULT 0 CHECK (reserved >= 0 AND reserved <= quantity),
+    -- Stock mínimo: por debajo de este nivel la cocina debe reponer el insumo.
+    minimum INTEGER NOT NULL DEFAULT 0 CHECK (minimum >= 0),
     PRIMARY KEY (site_id, ingredient_id)
   );
   CREATE TABLE orders (
@@ -546,10 +507,11 @@ async function sitePrices(client, siteId) {
 
 async function siteStock(client, siteId) {
   const result = await client.query(`
-    SELECT ingredients.id, ingredients.name, ingredients.unit, stock.quantity, stock.reserved
+    SELECT ingredients.id, ingredients.name, ingredients.unit, ingredients.category,
+      stock.quantity, stock.reserved, stock.minimum
     FROM stock JOIN ingredients ON ingredients.id = stock.ingredient_id
     WHERE stock.site_id = $1
-    ORDER BY ingredients.name
+    ORDER BY ingredients.sort_order
   `, [siteId]);
   return result.rows;
 }
@@ -652,8 +614,9 @@ async function seedCatalog(client) {
     await client.query('INSERT INTO channels VALUES ($1, $2, $3, $4, $5)',
       [channel.id, channel.name, channel.type, channel.commission, index]);
   }
-  for (const ingredient of ingredients) {
-    await client.query('INSERT INTO ingredients VALUES ($1, $2, $3)', [ingredient.id, ingredient.name, ingredient.unit]);
+  for (const [index, ingredient] of ingredients.entries()) {
+    await client.query('INSERT INTO ingredients VALUES ($1, $2, $3, $4, $5)',
+      [ingredient.id, ingredient.name, ingredient.unit, ingredient.group, index]);
   }
   for (const [index, item] of menu.entries()) {
     await client.query('INSERT INTO products VALUES ($1, $2, $3, $4, $5, $6)',
@@ -687,8 +650,8 @@ async function seedPrices(client) {
 async function seedStock(client) {
   for (const [index, site] of sites.entries()) {
     for (const ingredient of ingredients) {
-      await client.query('INSERT INTO stock (site_id, ingredient_id, quantity) VALUES ($1, $2, $3)',
-        [site.id, ingredient.id, ingredient.quantities[index]]);
+      await client.query('INSERT INTO stock (site_id, ingredient_id, quantity, minimum) VALUES ($1, $2, $3, $4)',
+        [site.id, ingredient.id, ingredient.stock[index], ingredient.min]);
     }
   }
 }
@@ -872,7 +835,7 @@ class FogonStore {
           name: product.name,
           description: product.description,
           category: product.category,
-          image: product.id,
+          image: dishImage(product.category, product.id),
           price: product.price_cents / 100,
           active: product.active,
           prepMinutes: product.prep_minutes,
@@ -916,7 +879,7 @@ class FogonStore {
         paymentMethods,
         products,
         orders: orders.map(serializeOrder),
-        stock: stock.map(({ name, quantity, reserved, unit }) => ({ name, quantity, reserved, unit })),
+        stock: stock.map(({ name, quantity, reserved, unit, category, minimum }) => ({ name, quantity, reserved, unit, category, minimum })),
         siteId,
         events: events.map(({ type, subject, order_id, at }) => ({
           type, subject, orderId: order_id ? publicOrderId(order_id) : null, at: at.toISOString(),

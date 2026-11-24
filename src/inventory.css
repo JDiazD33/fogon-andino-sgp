@@ -122,6 +122,56 @@
 .fogon-inventory .inventory-stock-bar[data-empty="true"] { background: var(--inv-soft); }
 .fogon-inventory .inventory-stock-bar span { background: var(--brass); }
 
+/* Insumos agrupados por tipo ------------------------------------------------- */
+
+.fogon-inventory .inventory-group { margin-top: 26px; }
+
+.fogon-inventory .inventory-group h4 {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--inv-line);
+  font-family: var(--serif, Georgia, serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 1.05rem;
+  color: var(--text-hi, #222);
+}
+
+.fogon-inventory .inventory-group h4 span {
+  font-family: var(--mono, ui-monospace, monospace);
+  font-style: normal;
+  font-size: 0.78rem;
+  color: var(--inv-muted);
+}
+
+.fogon-inventory .inventory-group .inventory-stock-list { margin-top: 0; }
+
+/* Bajo el stock mínimo: reponer; en cero: agotado. */
+.fogon-inventory .inventory-flag {
+  font-family: var(--display, sans-serif);
+  font-size: var(--micro, 10px);
+  font-style: normal;
+  font-weight: 600;
+  letter-spacing: var(--track, 0.2em);
+  text-transform: uppercase;
+  color: var(--brass);
+}
+
+.fogon-inventory .inventory-stock-row[data-level="agotado"] .inventory-flag { color: var(--ember); }
+.fogon-inventory .inventory-stock-row[data-level="bajo"] .inventory-stock-bar { background: var(--brass); }
+
+.fogon-inventory .inventory-restock {
+  margin-top: 16px;
+  padding-left: 14px;
+  border-left: 1px solid var(--ember);
+  color: var(--ink-dim, #555);
+  font-size: 0.86rem;
+}
+
+.fogon-inventory .inventory-restock strong { color: var(--ember); font-weight: 600; }
+
 .fogon-inventory .inventory-calculator {
   min-width: 0;
   padding: 24px 0 0;

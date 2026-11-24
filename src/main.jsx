@@ -108,13 +108,11 @@ function Status({ status }) {
   return <span className={`status ${status}`}><i />{statusLabels[status]}</span>
 }
 
-// Los videos de referencia (material de Central Restaurante) solo existen en la
-// copia local: `.env.local` define VITE_VIDEOS_REFERENCIA=1. La versión publicada
-// no los incluye y muestra fotos propias del proyecto con un zoom lento.
+// La portada usa los videos de public/video/ cuando la compilación define
+// VITE_VIDEOS_REFERENCIA=1 (.env.local en la computadora, render.yaml en la nube).
+// Sin esa variable muestra fotos de la carta con un zoom lento.
 const referenceVideos = import.meta.env.VITE_VIDEOS_REFERENCIA === '1'
-const photo = (file, position = 'center') => ({ backgroundImage: `url(/img/${file})`, backgroundPosition: position })
-// Un plato de la cuadrícula de la carta (tres columnas, dos filas).
-const cartaTile = (x, y) => ({ backgroundImage: 'url(/img/carta.jpg)', backgroundSize: '300% 200%', backgroundPosition: `${x} ${y}` })
+const photo = (file, position = 'center') => ({ backgroundImage: `url(/img/platos/${file})`, backgroundPosition: position })
 
 // Video decorativo en bucle, sin sonido. Solo se reproduce mientras está a la
 // vista y respeta «reducir movimiento»: en ese caso queda el póster fijo.
@@ -370,7 +368,8 @@ function App() {
 }
 
 function Menu({ channel, site, state, refresh, waiting, setWaiting }) {
-  const [category, setCategory] = useState('Todos')
+  // Con 60 platos la carta abre en la primera categoría, no en «Todos».
+  const [category, setCategory] = useState(() => categoryOrder.find(name => state.products.some(product => product.category === name)) ?? 'Todos')
   const [cart, setCart] = useState({})
   const [zone, setZone] = useState(site.deliveryZones[0] || '')
   const [table, setTable] = useState('Mesa 01')
@@ -462,20 +461,20 @@ function Menu({ channel, site, state, refresh, waiting, setWaiting }) {
       {/* Portada a sangre: dos videos, mitad y mitad, y metadatos en las esquinas. */}
       <section className="hero" aria-label="Portada">
         <h1 className="sr-only">Fogón Andino · Cocina peruana al momento</h1>
-        <div className="hero-panel"><LoopVideo name="central-video-1" eager still={photo('especial.jpg', 'center 46%')} /></div>
-        <div className="hero-panel"><LoopVideo name="central-video-2" eager still={photo('carta.jpg')} /></div>
+        <div className="hero-panel"><LoopVideo name="central-video-1" eager still={photo('fondos/pachamanca.webp')} /></div>
+        <div className="hero-panel"><LoopVideo name="central-video-2" eager still={photo('entradas/ceviche-clasico.webp')} /></div>
         <p className="hero-meta"><span>Miraflores · San Isidro — Lima, Perú</span><span>@fogonandino</span></p>
       </section>
       {/* Recorrido vertical: videos cuadrados al centro y textos que alternan de lado. */}
       <section className="recorrido frame" aria-labelledby="recorrido-titulo">
         <h2 className="recorrido-title" id="recorrido-titulo">Un solo fuego<br />de la altura<br />a la costa</h2>
         <div className="recorrido-grid">
-          <div className="recorrido-media at-1"><LoopVideo name="central-video-3" still={photo('lomo-saltado.jpg')} /></div>
+          <div className="recorrido-media at-1"><LoopVideo name="central-video-3" still={photo('fondos/tacu-tacu-con-lomo.webp')} /></div>
           <div className="recorrido-text at-left">
             <p className="recorrido-lead">Cada plato se cocina al momento de pedirlo, para tu mesa o camino a tu casa.</p>
             <p className="recorrido-body">Cada mañana, la cocina central de Ate prepara los fondos, ajíes y marinados que llegan a nuestras sedes. En cada fogón el plato se termina cuando lo pides: en el salón, para recoger o por delivery.</p>
           </div>
-          <div className="recorrido-media at-2"><LoopVideo name="central-video-4" still={cartaTile('100%', '100%')} /></div>
+          <div className="recorrido-media at-2"><LoopVideo name="central-video-4" still={photo('postres/picarones.webp')} /></div>
           <div className="recorrido-text at-right">
             <p className="recorrido-label">Fogón Andino</p>
             <p className="recorrido-body">Pide desde la web o desde tu mesa: el pedido entra una sola vez, llega directo a la cocina y lo sigues con el mismo número hasta que esté contigo.</p>
@@ -501,7 +500,9 @@ function Menu({ channel, site, state, refresh, waiting, setWaiting }) {
         {hint && <p className="suggestion" role="status">{hint}</p>}
         <div className="dish-grid">
           {visible.map(product => <article className="dish" key={product.id}>
-            <div className={`dish-photo photo-${product.image}`} aria-hidden="true" />
+            <div className="dish-photo" aria-hidden="true">
+              <img src={product.image} alt="" width="96" height="96" loading="lazy" decoding="async" />
+            </div>
             <div className="dish-content">
               <div className="dish-line">
                 <h3>{product.name}</h3>

@@ -1,12 +1,8 @@
 const cacheName = `fogon-shell-${new URL(self.location.href).searchParams.get('build') || '1'}`
-const assets = [
-  '/manifest.webmanifest', '/img/icon-192.png', '/img/icon-512.png', '/img/carta.jpg',
-  '/img/especial.jpg', '/img/lomo-saltado.jpg',
-]
-// Los videos no se guardan en caché (pesan y se piden por rangos); sí sus
-// pósteres cuando existen, para que la portada local se vea aunque el servidor
-// se apague. La versión publicada no tiene videos: su ausencia no debe impedir
-// que el service worker se instale.
+const assets = ['/manifest.webmanifest', '/img/icon-192.png', '/img/icon-512.png']
+// Los videos y las 60 fotos de la carta no se guardan de antemano (pesan); sí
+// los pósteres de los videos cuando existen, para que la portada se vea aunque
+// el servidor se apague. Si faltan, el service worker se instala igual.
 const optional = [1, 2, 3, 4].map(number => `/video/central-video-${number}.jpg`)
 
 self.addEventListener('install', event => {

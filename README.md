@@ -4,7 +4,7 @@ Prototipo académico del SGP v2: las **seis capacidades** que la Figura 14 (p. 4
 
 ## Arranque local
 
-Abre la terminal en la carpeta `M prototipo-fogoN`. Usa Node.js 24 y PostgreSQL. Si necesitas instalar PostgreSQL en macOS con Homebrew, ejecuta `brew install postgresql@17`. Luego ejecuta estos comandos.
+Abre la terminal en la carpeta `fogon-andino-sgp`. Usa Node.js 24 y PostgreSQL. Si necesitas instalar PostgreSQL en macOS con Homebrew, ejecuta `brew install postgresql@17`. Luego ejecuta estos comandos.
 
 ```sh
 node --version
@@ -82,8 +82,8 @@ Ensaya primero con los datos reiniciados. El recorrido completo toma unos ocho m
 
 En las vistas internas, la barra muestra **Salón**, **Cocina**, **Despacho** y **Caja**; **Reservas**, **Canales**, **Gestión** y **Evidencia** están en el menú **Más**. Las direcciones (`/#reservas`, `/#evidencia`, etc.) no cambian.
 
-1. **Carta y sede.** Abre la carta en el celular. En Miraflores, muestra la causa limeña agotada porque falta papa amarilla. Cambia a San Isidro para ver su disponibilidad y precio. Vuelve a Miraflores. La API calcula la disponibilidad con las recetas y existencias de la sede. Para delivery también valida que la zona elegida esté cubierta por esa sede.
-2. **Dos canales, una cola.** En la carta, pide un lomo saltado para la zona Miraflores con el pago de prueba aprobado. En **Salón**, agrega una chicha morada a la **Mesa 01** y confirma. Muestra los dos IDs en **Cocina**, uno etiquetado como web y el otro como salón. La cola recibe ambos pedidos desde la API sin volver a digitarlos.
+1. **Carta y sede.** Abre la carta en el celular. En Miraflores, muestra la trucha frita agotada porque no llegó trucha. Cambia a San Isidro para ver su disponibilidad y precio; allí, en cambio, el agotado es el cuy chactado. Vuelve a Miraflores. La API calcula la disponibilidad con las recetas y existencias de la sede. Para delivery también valida que la zona elegida esté cubierta por esa sede.
+2. **Dos canales, una cola.** En la carta, pide un tacu tacu con lomo para la zona Miraflores con el pago de prueba aprobado. En **Salón**, agrega una chicha de jora a la **Mesa 01** y confirma. Muestra los dos IDs en **Cocina**, uno etiquetado como web y el otro como salón. La cola recibe ambos pedidos desde la API sin volver a digitarlos.
 3. **Reserva de mesa.** En **Reservas**, muestra la agenda: mesas, turnos y las reservas ya sembradas. Registra una reserva nueva para una mesa libre y confirma que la vista de salón reconoce a quién espera la comanda. Intenta reservar un turno ya tomado: la base de datos lo rechaza, no la interfaz.
 4. **Cocina y despacho.** Para el pedido web, pulsa **Iniciar preparación** y luego **Marcar listo**. Muestra el cambio en **Pedidos** del celular. En **Despacho** o **Pedidos**, abre **Boleta en PDF**. En **Despacho**, pulsa **Marcar en camino**. Copia el código de cuatro dígitos que aparece en el seguimiento del celular y úsalo para **Confirmar entrega**. El pedido llega a **Entregado** con el mismo ID.
 5. **Seis canales, un gestor.** En **Canales**, registra un pedido de WhatsApp (cliente, teléfono, recojo o delivery, Yape) y luego pulsa **Recibir pedido de prueba** en Rappi. Muestra el mensaje en el formato propio de Rappi y el `201` con el ID `FA-…` que creó el conector. Pulsa **Reenviar el mismo mensaje**: la respuesta es `200 · Duplicado ignorado` con el mismo ID. Así se evita el pedido duplicado que hoy se re-digita desde la tablet.
@@ -121,7 +121,6 @@ Como ensayos alternativos, selecciona **Fuera de cobertura** o **Rechazado** al 
 - **Dependencia de P04.** El Gantt dibuja P04 de M4 a M13 y P02 hasta M6. La Tabla 29 indica una dependencia fin–inicio de P04 respecto a P02. Como aclaración propuesta, los trabajos de diseño y validación controlada pueden transcurrir en M4–M6, y las actividades que requieren nube e identidad quedan para M7–M13. Esta lectura conserva H4 en M9 y H6 en M13. Avance 2, Tabla 29 y Figura 17, pp. 67–68.
 - **Pregunta adicional para el ensayo.** OE6 fija la inscripción de bancos de datos para M6 y la Tabla 23 la incluye en P08, que el Gantt inicia en M12. Si preguntan por ese plazo, se puede proponer la inscripción como hito temprano de gobierno P01 a cargo del Oficial de Datos y mantener la automatización de consentimientos dentro de P08. Avance 2, Tablas 7 y 23 y Figura 17, pp. 22, 59 y 68.
 
-
 ### Trazabilidad de lo que se puede afirmar
 
 | Requerimientos del Avance 2 | Alcance comprobable en la demo |
@@ -144,7 +143,7 @@ Referencias de trazabilidad en Avance 2, Tabla 38, pp. 83–84. Los controles de
 
 - **Pedidos** permite buscar cualquier pedido de la demostración por su número completo, por ejemplo `FA-1005`. En **Despacho**, **Ver seguimiento** abre la misma consulta. El código se genera al marcar listo un pedido web y aparece como confirmado después de registrar la entrega.
 - **Boleta o factura en PDF** aparece en cuanto el pedido se cobra: al registrarlo si se paga por adelantado (web, WhatsApp, teléfono, agregadores o salón con pago inmediato), o en **Caja** si la cuenta de salón quedó abierta. Lleva serie y correlativo (B001/F001 en Miraflores, B002/F002 en San Isidro).
-- **Cocina** muestra existencias físicas, libres y reservadas en kg y L. La calculadora multiplica cada cantidad por el número de porciones elegido y muestra el déficit frente al stock libre de la sede. Las recetas comparten insumos.
+- **Cocina** muestra los 80 insumos de la sede agrupados por tipo (carnes y aves, pescados y mariscos, tubérculos, ajíes y hierbas, etc.), con sus existencias físicas, libres y reservadas en kg y L y su stock mínimo. Si lo libre baja del mínimo, el insumo se marca para reponer; en Miraflores aparecen la trucha andina y el ají limo. La calculadora multiplica cada cantidad por el número de porciones elegido y muestra el déficit frente al stock libre de la sede. Las recetas comparten insumos.
 - **Reservas** es la sexta capacidad que la Figura 14 (p. 46) del Avance 2 asigna al SGP v2: reserva de mesa. La agenda cruza las mesas de la sede con los turnos de almuerzo y cena. La regla de una mesa por turno está impuesta por un índice único parcial en PostgreSQL, no por la interfaz; la capacidad en lugares se valida contra la mesa. Cada cambio de estado publica un evento de dominio propio, visible en **Evidencia**.
 - **Salón** reconoce la reserva viva de la mesa: al registrar la comanda, el POS indica a quién espera esa mesa y para qué turno.
 
@@ -164,12 +163,13 @@ Si necesitas que la pestaña se veo completamente vacía, borra los datos del si
 
 La interfaz sigue la dirección de arte de [Central Restaurante](https://centralrestaurante.com.pe): una portada a sangre con dos videos, papel claro `#f2f2f2` con tinta `#222`, un recorrido vertical de videos cuadrados con textos que alternan de lado, titulares en mayúsculas ultraligeras (Jost), cursivas serif finas (Newsreader), un logotipo condensado (Big Shoulders Display) y un pie oscuro de tres columnas. El sitio público muestra solo **Carta** y **Pedidos**; **Operación** abre las vistas internas, que tienen su propia barra con las menos usadas en **Más**. **Gestión** y **Evidencia** muestran primero lo que se señala al exponer y pliegan el resto. La especificación completa está en [DESIGN.md](./DESIGN.md) y los tokens viven en el bloque `:root` de `src/styles.css`.
 
-El rediseño es íntegramente de presentación: no alteró la API, el modelo de datos, los flujos de pedido ni la boleta en PDF. Las versiones anteriores quedaron guardadas en `.design-backup-original/` (diseño original) y `.backup-antes-central/` (versión de MiniMax, antes de esta revisión).
+El rediseño es íntegramente de presentación: no alteró la API, el modelo de datos, los flujos de pedido ni la boleta en PDF.
 
 ### Videos de la portada
 
 Los cuatro videos de `public/video/` (y sus pósteres `.jpg`) se copiaron de `videos-central-referencia/`: son material de **Central Restaurante**, usado solo como referencia visual provisional en este prototipo académico. La versión de Render los incluye para mostrarla al profesor; si la página se usara fuera del curso, habría que reemplazarlos por material propio. Sin `VITE_VIDEOS_REFERENCIA=1`, la portada muestra fotos propias del proyecto. La portada usa los videos 1 y 2; el recorrido, los videos 3 y 4. Los videos 5 y 6 quedaron solo en `videos-central-referencia/`: la portada ya no tiene cierre y termina en la carta. Cada video se reproduce sin sonido y solo mientras está a la vista; con «reducir movimiento» activado queda el póster fijo.
 
-### Fotos de la carta
+### Carta y fotos de los platos
 
-`public/img/especial.jpg`, que ya no se usa en la portada, se generó con ImageGen. El encargo fue una fotografía editorial 4:3 de lomo saltado de un bistró limeño, con porción contemporánea en plato artesanal gris, fondo oliva oscuro, mesa de nogal y luz natural indirecta, sin personas ni texto. Las otras dos imágenes se generaron con ImageGen. `public/img/lomo-saltado.jpg` parte de una fotografía editorial solicitada de lomo saltado, con arroz y papas, en loza oscura e iluminación cálida natural. `public/img/carta.jpg` parte de una cuadrícula fotográfica de seis platos con luz natural, sin rótulos, dividida visualmente en tres columnas y dos filas.
+La carta tiene 60 platos: 15 fondos, 15 entradas, 15 bebidas y 15 postres. Los platos, sus precios por sede, sus tiempos de preparación, sus recetas por porción y los 80 insumos con sus existencias y stock mínimo están en [`catalog.mjs`](./catalog.mjs). [CARTA.md](./CARTA.md) los lista con la ruta de cada foto y se regenera con `npm run carta`. Cada plato tiene su foto en WebP (1200 × 800) en `public/img/platos/<categoría>/<id>.webp`, y la carta la recorta al cuadrado. Si cambias `catalog.mjs`, sube `SCHEMA_VERSION` en `server.mjs` para que la base de la demo se vuelva a crear con los datos nuevos.
+

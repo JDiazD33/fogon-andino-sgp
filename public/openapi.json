@@ -118,7 +118,7 @@
                     "payment": "approved",
                     "items": [
                       {
-                        "productId": "lomo-saltado",
+                        "productId": "tacu-tacu-con-lomo",
                         "quantity": 1
                       }
                     ]
@@ -133,7 +133,7 @@
                     "payment": "pending",
                     "items": [
                       {
-                        "productId": "chicha-morada",
+                        "productId": "chicha-de-jora",
                         "quantity": 1
                       }
                     ]
@@ -151,7 +151,7 @@
                     "method": "yape",
                     "items": [
                       {
-                        "productId": "chicha-morada",
+                        "productId": "chicha-de-jora",
                         "quantity": 1
                       }
                     ]
@@ -649,7 +649,7 @@
                     "store_id": "fogon-miraflores",
                     "items": [
                       {
-                        "sku": "aji-de-gallina",
+                        "sku": "pollo-a-la-brasa",
                         "units": 1
                       }
                     ],
@@ -670,7 +670,7 @@
                     },
                     "details": [
                       {
-                        "integrationCode": "arroz-con-pollo",
+                        "integrationCode": "chaufa-de-pollo",
                         "quantity": 1
                       }
                     ],
@@ -688,27 +688,6 @@
           }
         },
         "responses": {
-          "201": {
-            "description": "Pedido creado en el OMS.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "duplicate": {
-                      "type": "boolean",
-                      "enum": [
-                        false
-                      ]
-                    },
-                    "order": {
-                      "$ref": "#/components/schemas/Order"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "200": {
             "description": "Mensaje repetido: se devuelve el pedido existente.",
             "content": {
@@ -720,6 +699,27 @@
                       "type": "boolean",
                       "enum": [
                         true
+                      ]
+                    },
+                    "order": {
+                      "$ref": "#/components/schemas/Order"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Pedido creado en el OMS.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "duplicate": {
+                      "type": "boolean",
+                      "enum": [
+                        false
                       ]
                     },
                     "order": {
@@ -1209,7 +1209,7 @@
         "properties": {
           "productId": {
             "type": "string",
-            "example": "lomo-saltado"
+            "example": "tacu-tacu-con-lomo"
           },
           "quantity": {
             "type": "integer",
@@ -1328,7 +1328,7 @@
           "total": {
             "type": "number",
             "description": "Importe en soles (PEN).",
-            "example": 36.5
+            "example": 44
           },
           "reference": {
             "type": "string",
@@ -1613,8 +1613,8 @@
           },
           "image": {
             "type": "string",
-            "description": "Identificador de la imagen del plato.",
-            "example": "lomo-saltado"
+            "description": "Ruta pública de la foto del plato (WebP, 1200 × 800).",
+            "example": "/img/platos/fondos/tacu-tacu-con-lomo.webp"
           },
           "price": {
             "type": "number",
@@ -1671,7 +1671,9 @@
           "name",
           "quantity",
           "reserved",
-          "unit"
+          "unit",
+          "category",
+          "minimum"
         ],
         "properties": {
           "name": {
@@ -1693,6 +1695,17 @@
               "g",
               "ml"
             ]
+          },
+          "category": {
+            "type": "string",
+            "description": "Tipo de insumo, por ejemplo «Tubérculos» o «Ajíes, hierbas y especias».",
+            "example": "Tubérculos"
+          },
+          "minimum": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Stock mínimo de la sede, en la misma unidad: por debajo, la cocina debe reponer.",
+            "example": 4000
           }
         }
       },
