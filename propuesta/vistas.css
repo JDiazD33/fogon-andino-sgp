@@ -1,17 +1,18 @@
-.op-shell {
-  max-width: 1080px;
-  min-height: 66vh;
-  padding-block: clamp(42px, 6vw, 82px) clamp(52px, 8vw, 102px);
-}
-
-.op-shell--public { max-width: 820px; min-height: 0; }
-body:has(.op-shell--public:not([hidden])) {
+body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
   min-height: 100dvh;
 }
-body:has(.op-shell--public:not([hidden])) #pie-cliente { margin-top: auto; }
+
+.pie { margin-block-start: auto; }
+
+.op-shell {
+  max-width: 1080px;
+  padding-block: clamp(42px, 6vw, 82px) clamp(52px, 8vw, 102px);
+}
+
+.op-shell--public { max-width: 820px; }
 .op-main { min-width: 0; }
 .conexion-propuesta { display: flex; gap: 9px 15px; align-items: center; flex-wrap: wrap; padding-block: 10px; }
 .conexion-propuesta[data-error="true"] { color: var(--brasa); }
