@@ -13,11 +13,6 @@
   const submit = document.querySelector('#pedido-web-enviar');
   const view = document.querySelector('#pedido-web-ver');
   const money = new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' });
-  const bebidasSinAlcohol = new Set([
-    'refresco-de-maracuya', 'limonada-con-hierbabuena', 'emoliente-caliente', 'refresco-de-camu-camu',
-    'refresco-de-aguaymanto', 'batido-de-lucuma', 'mate-de-muna', 'cafe-pasado', 'jugo-de-papaya',
-    'refresco-de-tumbo', 'chocolate-caliente-cusqueno',
-  ]);
   const carts = new Map();
   let current;
   let pending = false;
@@ -98,7 +93,6 @@
   Fogon.pedidoWeb = {
     card(card, item, index) {
       if (!Fogon.publicSite(index)) return;
-      if (item.categoria === 'Bebidas' && !bebidasSinAlcohol.has(item.id)) return;
       const button = card.querySelector('.plato-agregar');
       const draft = cart(index);
       const availability = Fogon.publicAvailability(item, index);
