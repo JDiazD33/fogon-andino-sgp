@@ -13,6 +13,11 @@
   const submit = document.querySelector('#pedido-web-enviar');
   const view = document.querySelector('#pedido-web-ver');
   const money = new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' });
+  const bebidasSinAlcohol = new Set([
+    'refresco-de-maracuya', 'limonada-con-hierbabuena', 'emoliente-caliente', 'refresco-de-camu-camu',
+    'refresco-de-aguaymanto', 'batido-de-lucuma', 'mate-de-muna', 'cafe-pasado', 'jugo-de-papaya',
+    'refresco-de-tumbo', 'chocolate-caliente-cusqueno',
+  ]);
   const carts = new Map();
   let current;
   let pending = false;
@@ -55,7 +60,7 @@
       remove.className = 'op-button op-button--secondary';
       remove.textContent = 'Quitar';
       remove.disabled = pending;
-      remove.setAttribute('aria-label', `Quitar una porción de ${item.nombre}`);
+      remove.setAttribute('aria-label', `Quitar una unidad de ${item.nombre}`);
       remove.addEventListener('click', () => {
         if (qty === 1) draft.items.delete(item.id);
         else draft.items.set(item.id, { item, qty: qty - 1 });
@@ -68,7 +73,7 @@
       rows.push(row);
     }
     list.replaceChildren(...rows);
-    count.textContent = quantity ? `· ${quantity} ${quantity === 1 ? 'plato' : 'platos'}` : '';
+    count.textContent = quantity ? `· ${quantity} ${quantity === 1 ? 'producto' : 'productos'}` : '';
     view.hidden = panel.hidden || !quantity;
     view.textContent = `Ver pedido (${quantity})`;
     total.textContent = money.format(amount / 100);
@@ -78,8 +83,8 @@
     }
     submit.disabled = pending || !valid;
     submit.textContent = pending ? 'Enviando…' : 'Confirmar pedido simulado';
-    status.textContent = !valid ? 'Revisa las cantidades. Algún plato ya no está disponible.' :
-      draft.message || 'Agrega platos de esta sede. El pago y la entrega se simulan.';
+    status.textContent = !valid ? 'Revisa las cantidades. Algún producto ya no está disponible.' :
+      draft.message || 'Agrega productos de esta sede. El pago y la entrega se simulan.';
     alert.hidden = !draft.error;
     alert.textContent = draft.error;
     link.hidden = !draft.orderId;
@@ -92,7 +97,8 @@
 
   Fogon.pedidoWeb = {
     card(card, item, index) {
-      if (!Fogon.publicSite(index) || item.categoria === 'Bebidas') return;
+      if (!Fogon.publicSite(index)) return;
+      if (item.categoria === 'Bebidas' && !bebidasSinAlcohol.has(item.id)) return;
       const button = card.querySelector('.plato-agregar');
       const draft = cart(index);
       const availability = Fogon.publicAvailability(item, index);
