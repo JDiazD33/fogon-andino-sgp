@@ -3,7 +3,7 @@ const assets = ['/manifest.webmanifest', '/img/icon-192.png', '/img/icon-512.png
 // Los videos y las 60 fotos de la carta no se guardan de antemano (pesan); sí
 // los pósteres de los videos cuando existen, para que la portada se vea aunque
 // el servidor se apague. Si faltan, el service worker se instala igual.
-const optional = [1, 2, 3, 4].map(number => `/video/central-video-${number}.jpg`)
+const optional = [...[1, 2, 3, 4].map(number => `/video/central-video-${number}.jpg`), '/video/pachamanca-portada.webp']
 
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
@@ -11,7 +11,7 @@ self.addEventListener('install', event => {
     const home = await fetch('/', { cache: 'reload' })
     if (!home.ok) throw new Error('No se pudo preparar la aplicación.')
     const markup = await home.clone().text()
-    const bundles = [...markup.matchAll(/(?:src|href)="(\/assets\/[^"]+)"/g)].map(match => match[1])
+    const bundles = [...markup.matchAll(/(?:src|href)="(\/(?:assets|propuesta)\/[^"]+)"/g)].map(match => match[1])
     await cache.addAll([...assets, ...bundles])
     await Promise.allSettled(optional.map(path => cache.add(path)))
     await cache.put('/', home)
@@ -30,9 +30,9 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url)
   if (event.request.method !== 'GET' || url.origin !== self.location.origin || url.pathname.startsWith('/api/')) return
-  if (event.request.mode === 'navigate' && url.pathname === '/') {
+  if (event.request.mode === 'navigate' && ['/', '/propuesta-fogon-andino.html'].includes(url.pathname)) {
     event.respondWith(fetch(event.request).catch(() => caches.match('/')))
-  } else if (url.pathname.startsWith('/assets/') || assets.includes(url.pathname) || optional.includes(url.pathname)) {
+  } else if (url.pathname.startsWith('/assets/') || url.pathname.startsWith('/propuesta/') || assets.includes(url.pathname) || optional.includes(url.pathname)) {
     event.respondWith((async () => {
       const cached = await caches.match(event.request)
       if (cached) return cached

@@ -1,0 +1,639 @@
+<!doctype html>
+<html lang="es-PE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Propuesta de Fogón Andino. Explora una selección de platos peruanos y las cartas de Miraflores y San Isidro.">
+  <meta name="theme-color" content="#1b1b1a">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/png" href="public/img/icon-192.png">
+  <title>Fogón Andino | Cocina peruana</title>
+  <style>
+    @font-face {
+      font-family: Jost;
+      src: url('public/fonts/propuesta/jost-latin-wght-normal.woff2') format('woff2');
+      font-style: normal;
+      font-weight: 100 900;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: 'Big Shoulders Display';
+      src: url('public/fonts/propuesta/big-shoulders-display-latin-wght-normal.woff2') format('woff2');
+      font-style: normal;
+      font-weight: 100 900;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: Newsreader;
+      src: url('public/fonts/propuesta/newsreader-latin-opsz-normal.woff2') format('woff2');
+      font-style: normal;
+      font-weight: 200 800;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: Newsreader;
+      src: url('public/fonts/propuesta/newsreader-latin-opsz-italic.woff2') format('woff2');
+      font-style: italic;
+      font-weight: 200 800;
+      font-display: swap;
+    }
+
+    :root {
+      color-scheme: light;
+      --papel: #f2f2f2;
+      --tinta: #222;
+      --gris: #51514e;
+      --noche: #1b1b1a;
+      --brasa: #93482b;
+      --cobre: #d6ab8c;
+      --regla: #cececa;
+      --jost: Jost, system-ui, sans-serif;
+      --newsreader: Newsreader, Georgia, serif;
+      --logo: 'Big Shoulders Display', 'Arial Narrow', sans-serif;
+      --ancho: 1180px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; background: var(--papel); color: var(--tinta); font: 1rem/1.6 var(--jost); }
+    h1, h2, h3, p, figure { margin: 0; }
+    a { color: inherit; }
+    button, select { font: inherit; color: inherit; }
+    img { display: block; max-width: 100%; }
+    [hidden] { display: none !important; }
+    [id] { scroll-margin-top: 24px; }
+    :focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
+    ::selection { background: var(--tinta); color: var(--papel); }
+
+    .contenedor { width: min(var(--ancho), calc(100% - 96px)); margin-inline: auto; }
+    .saltar { position: fixed; z-index: 3; top: 12px; left: 12px; padding: 10px 16px; background: var(--papel); transform: translateY(-160%); }
+    .saltar:focus { transform: none; }
+    .solo-lectores { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+    .cabecera { background: var(--noche); color: var(--papel); }
+    .encabezado { min-height: 84px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+    .marca { display: inline-flex; align-items: center; min-height: 44px; text-decoration: none; font: 260 clamp(1.75rem, 3vw, 2.46rem)/1 var(--logo); letter-spacing: .13em; text-transform: uppercase; white-space: nowrap; }
+    .navegacion { display: flex; align-items: center; gap: clamp(16px, 3.6vw, 52px); }
+    .navegacion a, .boton, .rotulo, .categoria, .selector { text-transform: uppercase; letter-spacing: .14em; font-weight: 500; }
+    .navegacion a { display: inline-flex; align-items: center; min-height: 44px; font-size: .78rem; text-decoration: none; white-space: nowrap; }
+    .navegacion a:hover { color: var(--cobre); }
+
+    .boton { display: inline-flex; min-height: 48px; align-items: center; justify-content: center; padding: 10px 19px; border: 1px solid #adada6; color: var(--papel); text-align: center; text-decoration: none; font-size: .78rem; transition: background .2s ease, color .2s ease; }
+    .boton:hover { color: var(--noche); background: var(--papel); }
+    .enlace { display: inline-flex; min-height: 44px; align-items: center; text-decoration-thickness: 1px; text-underline-offset: 5px; }
+    .enlace:hover { text-decoration-thickness: 2px; }
+
+    .portada { position: relative; display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); min-height: clamp(515px, 43vw, 690px); background: var(--noche); color: var(--papel); }
+    .portada-media { position: relative; grid-area: 1 / 2; min-height: 0; overflow: hidden; background: var(--noche); }
+    .portada-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .portada-interior { grid-area: 1 / 1; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; padding: 52px 36px 59px max(48px, calc((100vw - var(--ancho)) / 2)); }
+    .rotulo { display: flex; align-items: center; gap: 12px; font-size: .78rem; }
+    .rotulo::before { content: ''; width: 22px; height: 1px; background: currentColor; flex: none; }
+    .portada .rotulo { color: var(--cobre); }
+    h1, h2 { font-family: var(--jost); font-weight: 250; }
+    h1 { margin-block: 24px 20px; font-size: clamp(3.05rem, 5.8vw, 6.25rem); line-height: .98; letter-spacing: .045em; text-transform: uppercase; }
+    h1 em { display: block; margin-top: .07em; font: italic 320 1.06em/1 var(--newsreader); letter-spacing: -.03em; text-transform: none; }
+    .portada-descripcion { max-width: 32ch; color: #d5d5cf; font: 350 clamp(1.13rem, 1.55vw, 1.31rem)/1.45 var(--newsreader); }
+    .portada-acciones { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 20px; margin-top: 28px; }
+    .portada-acciones .enlace { color: #d5d5cf; font-size: .93rem; }
+    .portada-pie { position: absolute; right: clamp(14px, 3vw, 40px); bottom: clamp(14px, 2vw, 26px); padding: 4px 9px; background: #1b1b1af0; color: var(--papel); font-size: .72rem; letter-spacing: .11em; text-transform: uppercase; }
+
+    .titulo-seccion { font-size: clamp(2.1rem, 4.1vw, 3.7rem); line-height: 1.08; letter-spacing: .075em; text-transform: uppercase; }
+    .cocina { max-width: 1070px; padding-block: clamp(44px, 5.5vw, 78px); }
+    .cocina-titulo { max-width: 25ch; margin: 0 auto clamp(28px, 3.6vw, 50px); text-align: center; font-size: clamp(1.65rem, 3vw, 2.65rem); line-height: 1.18; }
+    .cocina-titulo span { display: block; }
+    .cocina-paso { display: grid; grid-template-columns: minmax(0, 1fr) clamp(172px, 20vw, 252px) minmax(0, 1fr); align-items: center; gap: clamp(24px, 4.2vw, 60px); }
+    .cocina-paso + .cocina-paso { margin-top: clamp(24px, 3.1vw, 44px); }
+    .cocina-paso img { grid-area: 1 / 2; width: 100%; height: auto; aspect-ratio: 1; object-fit: cover; background: #dededb; }
+    .cocina-contenido { width: min(100%, 285px); }
+    .cocina-paso:first-of-type .cocina-contenido { grid-area: 1 / 1; align-self: end; justify-self: end; }
+    .cocina-paso:last-of-type .cocina-contenido { grid-area: 1 / 3; }
+    .cocina-contenido h3 { font: italic 345 clamp(1.65rem, 2.65vw, 2.45rem)/1.05 var(--newsreader); }
+    .cocina-texto { margin-top: 8px; color: var(--gris); font: 360 clamp(1.06rem, 1.5vw, 1.18rem)/1.38 var(--newsreader); }
+    .cocina-enlaces { display: flex; flex-wrap: wrap; gap: 0 18px; margin-top: 3px; }
+    .cocina .enlace { font-size: .76rem; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; }
+
+    .carta { max-width: 880px; padding-block: clamp(44px, 5.4vw, 76px) clamp(64px, 8.6vw, 125px); border-top: 1px solid var(--regla); }
+    .carta-encabezado { display: grid; justify-items: center; gap: 8px; margin-bottom: 25px; text-align: center; }
+    .carta-encabezado h1 { margin: 0; }
+    .carta-mas { display: flex; justify-content: center; margin-top: clamp(24px, 3.5vw, 42px); }
+    .carta-mas .boton { background: var(--tinta); border-color: var(--tinta); }
+    .carta-mas .boton:hover { background: var(--papel); color: var(--tinta); }
+    .carta-mas .boton:focus-visible { outline-color: var(--tinta); }
+    .carta-contexto { max-width: 880px; padding-top: clamp(16px, 2.5vw, 32px); }
+    .carta-contexto .enlace { font-size: .9rem; }
+    .carta-completa .carta { border: 0; padding-top: clamp(14px, 3.5vw, 49px); }
+    .sede-actual { color: var(--gris); font: italic 360 clamp(1.28rem, 2.4vw, 1.76rem)/1.24 var(--newsreader); }
+    .carta-conteo { color: var(--gris); font-size: .79rem; letter-spacing: .1em; text-transform: uppercase; }
+    .controles { display: flex; justify-content: space-between; align-items: center; gap: 12px 20px; padding: 8px 0; border-block: 1px solid var(--regla); }
+    .categorias { display: flex; flex-wrap: wrap; gap: 0 clamp(4px, 1.5vw, 21px); }
+    .categoria { min-height: 44px; padding: 8px 4px 6px; border: 0; border-bottom: 2px solid transparent; background: transparent; cursor: pointer; font-size: .8rem; color: var(--gris); }
+    .categoria:hover { color: var(--tinta); border-bottom-color: var(--regla); }
+    .categoria[aria-pressed="true"] { color: var(--brasa); border-bottom-color: currentColor; }
+    .selector { position: relative; display: flex; align-items: center; gap: 9px; font-size: .76rem; }
+    .selector::after { position: absolute; right: 13px; content: ''; width: 7px; height: 7px; border: solid currentColor; border-width: 0 1px 1px 0; transform: translateY(-2px) rotate(45deg); pointer-events: none; }
+    .selector select { appearance: none; min-height: 44px; padding: 5px 30px 5px 11px; border: 1px solid #9c9c97; background: var(--papel); font-size: .9rem; font-weight: 400; cursor: pointer; }
+    .plato { display: grid; grid-template-columns: 112px minmax(0, 1fr); align-items: center; gap: 24px; padding-block: 20px; border-bottom: 1px solid var(--regla); }
+    .plato img { width: 100%; aspect-ratio: 1; height: auto; object-fit: cover; background: #e8e8e6; }
+    .plato-tipo { margin-bottom: 7px; color: var(--gris); font-size: .75rem; font-weight: 500; text-transform: uppercase; letter-spacing: .12em; }
+    .plato-linea { display: flex; align-items: baseline; gap: 11px; margin-bottom: 3px; }
+    .plato-linea::after { content: ''; order: 1; flex: 1; min-width: 10px; border-bottom: 1px dotted #a09f98; }
+    .plato h3 { font: italic 360 clamp(1.42rem, 3.1vw, 2.16rem)/1.08 var(--newsreader); }
+    .plato-precio { order: 2; white-space: nowrap; font: .97rem/1.6 ui-monospace, Consolas, monospace; font-variant-numeric: tabular-nums; }
+    .plato-descripcion { color: var(--gris); font: 360 1.08rem/1.45 var(--newsreader); }
+
+    .sedes { padding-block: clamp(58px, 7vw, 98px); background: var(--noche); color: var(--papel); }
+    .sedes-interior { display: grid; grid-template-columns: 1fr 1.55fr; align-items: start; gap: clamp(24px, 5vw, 72px); }
+    .sedes-intro { color: #c8c8c1; margin-top: 15px; font: 350 1.16rem/1.4 var(--newsreader); }
+    .sedes .boton { margin-top: 14px; }
+    .sedes-lista { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }
+    .sede { padding-top: 17px; border-top: 1px solid #666660; }
+    .sede h3 { font: italic 340 clamp(1.66rem, 3vw, 2.4rem)/1.1 var(--newsreader); }
+    .sede .enlace { margin-top: 3px; color: #d7d7d0; font-size: .91rem; }
+    .pie { background: var(--noche); color: #c8c8c1; }
+    .pie-contenido { display: flex; align-items: center; justify-content: space-between; gap: 10px 24px; flex-wrap: wrap; min-height: 91px; padding-block: 12px; border-top: 1px solid #666660; font-size: .85rem; }
+    .pie .marca { color: var(--papel); font-size: 1.78rem; }
+
+    @media (max-width: 930px) {
+      .contenedor { width: calc(100% - 58px); }
+      .portada-interior { padding-left: 29px; padding-right: 29px; }
+      .sedes-interior { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 660px) {
+      .contenedor { width: calc(100% - 36px); }
+      .encabezado { min-height: 67px; gap: 9px; }
+      .encabezado .marca { font-size: 1.66rem; letter-spacing: .07em; }
+      .navegacion { gap: 12px; }
+      .navegacion a { font-size: .7rem; letter-spacing: .07em; }
+      .navegacion .navegacion-editorial { display: none; }
+      .portada { display: flex; flex-direction: column; min-height: 0; }
+      .portada-media { height: min(75vw, 425px); }
+      .portada-interior { padding: 30px 18px 42px; }
+      h1 { font-size: clamp(3.2rem, 11vw, 5rem); margin-block: 16px 14px; }
+      .portada-acciones { margin-top: 17px; }
+      .cocina-paso { display: flex; flex-direction: column; gap: 16px; }
+      .cocina-paso + .cocina-paso { margin-top: 30px; }
+      .cocina-paso img { width: clamp(178px, 54vw, 238px); }
+      .cocina-paso:first-of-type .cocina-contenido { align-self: center; }
+      .controles { align-items: flex-start; flex-direction: column; }
+      .categorias { width: 100%; justify-content: space-between; column-gap: 4px; }
+      .categoria { padding-inline: 2px; font-size: .75rem; letter-spacing: .055em; }
+      .selector { align-self: flex-end; }
+      .plato { grid-template-columns: clamp(64px, 21vw, 84px) minmax(0, 1fr); align-items: start; gap: 12px; }
+      .plato-linea { display: grid; grid-template-columns: minmax(0, 1fr) max-content; column-gap: 8px; }
+      .plato-linea::after { display: none; }
+      .plato h3 { font-size: clamp(1.27rem, 5.7vw, 1.47rem); line-height: 1.12; }
+      .plato-precio { justify-self: end; font: 550 1rem/1.4 var(--jost); font-variant-numeric: tabular-nums; }
+      .plato-descripcion { font-size: 1rem; }
+    }
+
+    @media (max-width: 360px) {
+      .categoria { font-size: .82rem; letter-spacing: .02em; text-transform: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .boton { transition: none; }
+    }
+  </style>
+  <link rel="stylesheet" href="propuesta/vistas.css">
+  <link rel="stylesheet" href="propuesta/servicio.css">
+  <link rel="stylesheet" href="propuesta/inventario.css">
+  <link rel="stylesheet" href="propuesta/gestion.css">
+  <script defer src="propuesta/app.js"></script>
+  <script defer src="propuesta/backend.js"></script>
+  <script defer src="propuesta/pedido-web.js"></script>
+  <script defer src="propuesta/productos.js"></script>
+  <script defer src="propuesta/vendor/qrcode.js"></script>
+  <script defer src="propuesta/comprobante.js"></script>
+  <script defer src="propuesta/servicio.js"></script>
+  <script defer src="propuesta/inventario.js"></script>
+  <script defer src="propuesta/operacion.js"></script>
+  <script defer src="propuesta/gestion.js"></script>
+</head>
+<body id="inicio">
+  <a class="saltar" id="saltar-contenido" href="#carta" hidden>Saltar a la carta</a>
+  <header class="cabecera">
+    <div class="encabezado contenedor">
+      <a class="marca" id="marca-principal" href="#inicio">Fogón Andino</a>
+      <nav class="navegacion" id="menu-cliente" aria-label="Navegación del cliente" hidden>
+        <a class="navegacion-editorial" href="#nuestra-cocina">Nuestra cocina</a>
+        <a href="#carta-completa">Carta</a>
+        <a href="#seguimiento">Pedidos</a>
+        <a class="navegacion-sedes" href="#sedes-completas">Sedes</a>
+      </nav>
+      <nav class="navegacion navegacion-operativa" id="menu-operativo" aria-label="Navegación administrativa" hidden>
+        <a href="#salon">Salón</a>
+        <a href="#reservas">Reservas</a>
+        <a href="#canales">Canales</a>
+        <a href="#cocina">Cocina</a>
+        <a href="#despacho">Despacho</a>
+        <a href="#caja">Caja</a>
+        <a href="#gestion">Gestión</a>
+        <a href="#evidencia">Evidencia</a>
+      </nav>
+      <a class="boton modo-cambio" id="cambiar-modo" href="?modo=administrativo#salon" hidden>Modo administrativo</a>
+    </div>
+  </header>
+
+  <div class="contenedor conexion-propuesta" id="conexion-propuesta" hidden>
+    <p id="conexion-mensaje" role="status"></p>
+    <button class="op-button op-button--secondary" id="conexion-reintentar" type="button" hidden>Reintentar</button>
+  </div>
+
+  <main id="vista-carta" hidden>
+    <section class="portada" aria-labelledby="titulo-portada">
+      <figure class="portada-media">
+        <video class="portada-video" id="video-pachamanca" poster="public/video/pachamanca-portada.webp" muted loop playsinline preload="none" aria-hidden="true">
+          <source src="public/video/pachamanca-portada.mp4" type="video/mp4">
+        </video>
+        <figcaption class="portada-pie">Pachamanca</figcaption>
+      </figure>
+      <div class="portada-interior">
+        <p class="rotulo">Cocina peruana</p>
+        <h1 id="titulo-portada">El sabor <em>de los Andes.</em></h1>
+        <p class="portada-descripcion">Pachamanca, rocoto relleno y otros clásicos peruanos para compartir.</p>
+        <div class="portada-acciones">
+          <a class="boton" href="#carta">Explorar la carta</a>
+          <a class="enlace" href="#nuestra-cocina">Conoce nuestra cocina</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="cocina contenedor" id="nuestra-cocina" aria-labelledby="titulo-cocina">
+      <h2 class="titulo-seccion cocina-titulo" id="titulo-cocina">Un solo fuego <span>de la altura a la costa</span></h2>
+      <article class="cocina-paso">
+        <img src="public/img/pachamanca-detalle.webp" alt="Un chef coloca huacatay con pinzas sobre papas andinas y choclo" width="720" height="720" loading="lazy">
+        <div class="cocina-contenido">
+          <h3>La pachamanca de la casa</h3>
+          <p class="cocina-texto">Carnes, papas andinas y choclo con el aroma del huacatay.</p>
+          <div class="cocina-enlaces">
+            <a class="enlace" href="#carta-completa/pachamanca" id="ver-pachamanca">Ver la pachamanca</a>
+          </div>
+        </div>
+      </article>
+      <article class="cocina-paso">
+        <img src="public/img/pachamanca-mesa.webp" alt="Pachamanca emplatada en el comedor" width="900" height="600" loading="lazy">
+        <div class="cocina-contenido">
+          <h3>La carta por sede</h3>
+          <p class="cocina-texto">Explora los 60 platos y consulta los precios de Miraflores y San Isidro.</p>
+          <div class="cocina-enlaces">
+            <a class="enlace" href="#carta-completa">Ver la carta</a>
+            <a class="enlace" href="#sedes-completas">Ver sedes</a>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <div id="carta-portada">
+      <section class="carta contenedor" id="carta" aria-labelledby="titulo-carta">
+        <div class="carta-encabezado">
+          <h2 class="titulo-seccion" id="titulo-carta">La carta</h2>
+          <h1 class="titulo-seccion" id="titulo-carta-completa" tabindex="-1" hidden>La carta</h1>
+          <p class="sede-actual" id="sede-actual">Miraflores</p>
+          <p class="carta-conteo" id="conteo-carta"></p>
+        </div>
+        <div class="controles" id="controles-carta" hidden>
+          <div class="categorias" role="group" aria-label="Categorías de la carta">
+            <button type="button" class="categoria" data-categoria="Fondos" aria-pressed="true">Fondos</button>
+            <button type="button" class="categoria" data-categoria="Entradas" aria-pressed="false">Entradas</button>
+            <button type="button" class="categoria" data-categoria="Bebidas" aria-pressed="false">Bebidas</button>
+            <button type="button" class="categoria" data-categoria="Postres" aria-pressed="false">Postres</button>
+            <button type="button" class="categoria" data-categoria="Todos" aria-pressed="false">Todos</button>
+          </div>
+          <label class="selector" for="sede-carta">Sede
+            <select id="sede-carta">
+              <option value="0">Miraflores</option>
+              <option value="1">San Isidro</option>
+            </select>
+          </label>
+        </div>
+        <p class="solo-lectores" id="estado-carta" role="status"></p>
+        <details id="pedido-web" class="op-panel pedido-web" hidden>
+          <summary>Pedido de prueba <span id="pedido-web-cantidad"></span></summary>
+          <p id="pedido-web-estado" class="op-muted" role="status"></p>
+          <a id="pedido-web-seguimiento" class="op-link" hidden>Seguir mi pedido</a>
+          <form id="pedido-web-form" class="op-stack" hidden>
+            <ul class="op-list" id="pedido-web-productos" aria-label="Platos del pedido"></ul>
+            <p class="op-row"><span>Total estimado</span><strong id="pedido-web-total" class="op-amount"></strong></p>
+            <div class="op-fields">
+              <label class="op-field">Nombre para el pedido (opcional)<input name="customer" maxlength="70" autocomplete="off"></label>
+              <label class="op-field">Entrega<select name="fulfillment"><option value="Recojo">Recojo en sede</option><option>Delivery</option></select></label>
+              <label class="op-field" id="pedido-web-zona" hidden>Zona de entrega<select name="zone"></select></label>
+              <label class="op-field">Pago de prueba<select name="payment"><option value="Pagado">Aprobado</option><option value="Rechazado">Rechazado</option></select></label>
+            </div>
+            <p id="pedido-web-error" class="op-notice" data-tone="error" role="alert" hidden></p>
+            <div class="op-actions"><button id="pedido-web-enviar" class="op-button" type="submit">Confirmar pedido simulado</button></div>
+          </form>
+        </details>
+        <div class="platos" id="platos"></div>
+        <button id="pedido-web-ver" class="op-button pedido-web-ver" type="button" aria-controls="pedido-web" hidden>Ver pedido</button>
+        <div class="carta-mas" id="carta-mas" hidden>
+          <a class="boton" id="ver-carta-completa" href="#carta-completa" aria-label="Ver más platos en la carta completa">Ver más</a>
+        </div>
+        <noscript><p>Activa JavaScript en tu navegador para explorar la carta.</p></noscript>
+        <template id="plantilla-plato">
+          <article class="plato" tabindex="-1">
+            <img alt="" width="1200" height="800" loading="lazy">
+            <div class="plato-texto">
+              <p class="plato-tipo"></p>
+              <div class="plato-linea">
+                <h3></h3>
+                <p class="plato-precio"></p>
+              </div>
+              <p class="plato-descripcion"></p>
+              <button class="op-button op-button--secondary plato-agregar" type="button" hidden></button>
+            </div>
+          </article>
+        </template>
+      </section>
+    </div>
+
+    <section class="sedes" id="sedes" aria-labelledby="titulo-sedes">
+      <div class="sedes-interior contenedor">
+        <div>
+          <h2 class="titulo-seccion" id="titulo-sedes">Nuestras sedes</h2>
+          <p class="sedes-intro">Lima, Perú</p>
+          <a class="boton" id="ver-sedes-completas" href="#sedes-completas" aria-label="Ver más sobre nuestras sedes">Ver más</a>
+        </div>
+        <div class="sedes-lista">
+          <article class="sede">
+            <h3>Miraflores</h3>
+            <a class="enlace" href="#carta-completa" data-sede="0" aria-label="Ver la carta de Miraflores">Ver la carta</a>
+          </article>
+          <article class="sede">
+            <h3>San Isidro</h3>
+            <a class="enlace" href="#carta-completa" data-sede="1" aria-label="Ver la carta de San Isidro">Ver la carta</a>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <main class="carta-completa" id="vista-carta-completa" hidden>
+    <div class="carta-contexto contenedor"><a class="enlace" href="#inicio">Volver al inicio</a></div>
+  </main>
+
+  <main class="sedes-completas contenedor" id="vista-sedes-completas" aria-labelledby="titulo-sedes-completas" hidden>
+    <div class="sedes-contexto"><a class="enlace" href="#inicio">Volver al inicio</a></div>
+    <header class="sedes-encabezado">
+      <h1 class="titulo-seccion" id="titulo-sedes-completas" tabindex="-1">Nuestras sedes</h1>
+      <p>Lima, Perú</p>
+    </header>
+    <section class="sedes-horario" aria-labelledby="titulo-horario-sedes">
+      <div>
+        <h2 id="titulo-horario-sedes">Horario de salón</h2>
+        <p>Lunes a domingo, en ambas sedes</p>
+      </div>
+      <dl>
+        <div><dt>Almuerzo</dt><dd><time datetime="12:30">12:30</time> – <time datetime="14:30">14:30</time></dd></div>
+        <div><dt>Cena</dt><dd><time datetime="19:00">19:00</time> – <time datetime="22:00">22:00</time></dd></div>
+      </dl>
+    </section>
+    <div class="sedes-fichas">
+      <article class="sede-ficha" aria-labelledby="sede-miraflores-titulo">
+        <img src="public/img/sede-miraflores.webp" alt="Imagen ilustrativa de un comedor luminoso con mesas de mantel claro" width="960" height="640" loading="lazy">
+        <h2 id="sede-miraflores-titulo">Miraflores</h2>
+        <dl>
+          <div><dt>Servicios</dt><dd>Salón, recojo y delivery</dd></div>
+          <div><dt>Zona de delivery</dt><dd>Miraflores y Barranco</dd></div>
+        </dl>
+        <a class="enlace sede-carta-link" href="#carta-completa" data-sede="0">Ver la carta de Miraflores</a>
+      </article>
+      <article class="sede-ficha" aria-labelledby="sede-san-isidro-titulo">
+        <img src="public/img/sede-san-isidro.webp" alt="Imagen ilustrativa de un comedor con iluminación cálida y mesas oscuras" width="960" height="640" loading="lazy">
+        <h2 id="sede-san-isidro-titulo">San Isidro</h2>
+        <dl>
+          <div><dt>Servicios</dt><dd>Salón, recojo y delivery</dd></div>
+          <div><dt>Zona de delivery</dt><dd>San Isidro y Lince</dd></div>
+        </dl>
+        <a class="enlace sede-carta-link" href="#carta-completa" data-sede="1">Ver la carta de San Isidro</a>
+      </article>
+    </div>
+    <p class="sedes-nota">Información de la demostración. Imágenes ilustrativas.</p>
+  </main>
+
+  <main class="op-shell contenedor" id="vista-operativa" hidden>
+    <div class="op-main">
+      <header class="op-view-head">
+        <div>
+          <p class="op-kicker" id="contexto-vista"></p>
+          <h1 id="titulo-vista" tabindex="-1"></h1>
+          <p class="op-intro" id="intro-vista"></p>
+        </div>
+        <label class="op-field op-branch" id="selector-operativo">
+          <span>Sede</span>
+          <select id="sede-operativa">
+            <option value="miraflores">Miraflores</option>
+            <option value="san-isidro">San Isidro</option>
+          </select>
+        </label>
+      </header>
+      <div id="aviso-operativo" class="op-notice" role="status" hidden></div>
+      <div id="contenido-operativo"></div>
+    </div>
+  </main>
+
+  <footer class="pie" id="pie-cliente" hidden>
+    <div class="pie-contenido contenedor">
+      <a class="marca" href="#inicio">Fogón Andino</a>
+      <p>Carta y precios de demostración</p>
+      <a class="enlace" href="#inicio">Volver al inicio</a>
+    </div>
+  </footer>
+
+  <footer class="pie" id="pie-administrativo" hidden>
+    <div class="pie-contenido contenedor">
+      <a class="marca" href="#salon">Fogón Andino</a>
+      <p>Operación · Datos de demostración</p>
+    </div>
+  </footer>
+
+  <script>
+    // Catálogo de catalog.mjs incorporado para que el HTML funcione como archivo local.
+    const carta = [
+      {"id":"seco-de-res-con-frejoles","nombre":"Seco de res con frejoles","categoria":"Fondos","descripcion":"Res guisada en culantro y chicha de jora, con frejoles canarios y arroz.","precios":[4200,4500],"foto":"public/img/platos/fondos/seco-de-res-con-frejoles.webp"},
+      {"id":"rocoto-relleno-con-pastel-de-papa","nombre":"Rocoto relleno con pastel de papa","categoria":"Fondos","descripcion":"Rocoto arequipeño relleno de carne y queso, con pastel de papa gratinado.","precios":[3900,4200],"foto":"public/img/platos/fondos/rocoto-relleno-con-pastel-de-papa.webp"},
+      {"id":"trucha-frita","nombre":"Trucha frita","categoria":"Fondos","descripcion":"Trucha andina frita, con papas sancochadas, arroz y salsa criolla.","precios":[3800,4100],"foto":"public/img/platos/fondos/trucha-frita.webp"},
+      {"id":"carapulcra-con-sopa-seca","nombre":"Carapulcra con sopa seca","categoria":"Fondos","descripcion":"Guiso de papa seca con cerdo y ají panca, junto a tallarines rojos de sopa seca.","precios":[4000,4300],"foto":"public/img/platos/fondos/carapulcra-con-sopa-seca.webp"},
+      {"id":"adobo-arequipeno","nombre":"Adobo arequipeño","categoria":"Fondos","descripcion":"Cerdo macerado en chicha de jora y ají panca, con pan de tres puntas.","precios":[3800,4100],"foto":"public/img/platos/fondos/adobo-arequipeno.webp"},
+      {"id":"arroz-con-pato","nombre":"Arroz con pato","categoria":"Fondos","descripcion":"Pato confitado sobre arroz verde al culantro, con arvejas y ají amarillo.","precios":[4800,5200],"foto":"public/img/platos/fondos/arroz-con-pato.webp"},
+      {"id":"pachamanca","nombre":"Pachamanca","categoria":"Fondos","descripcion":"Cerdo, pollo y res al calor de piedras, con papa, camote, habas y humita.","precios":[5600,5900],"foto":"public/img/platos/fondos/pachamanca.webp"},
+      {"id":"tallarines-verdes-con-bistec","nombre":"Tallarines verdes con bistec","categoria":"Fondos","descripcion":"Tallarines en salsa de albahaca y queso fresco, con bistec a la plancha.","precios":[3900,4200],"foto":"public/img/platos/fondos/tallarines-verdes-con-bistec.webp"},
+      {"id":"arroz-con-mariscos","nombre":"Arroz con mariscos","categoria":"Fondos","descripcion":"Arroz meloso con mariscos, ají panca y un toque de pisco.","precios":[4600,4900],"foto":"public/img/platos/fondos/arroz-con-mariscos.webp"},
+      {"id":"pollo-a-la-brasa","nombre":"Pollo a la brasa","categoria":"Fondos","descripcion":"Cuarto de pollo a la brasa con papas fritas, ensalada fresca y cremas.","precios":[3600,3800],"foto":"public/img/platos/fondos/pollo-a-la-brasa.webp"},
+      {"id":"tacu-tacu-con-lomo","nombre":"Tacu tacu con lomo","categoria":"Fondos","descripcion":"Tacu tacu de frejol y arroz dorado, con lomo saltado al wok.","precios":[4400,4700],"foto":"public/img/platos/fondos/tacu-tacu-con-lomo.webp"},
+      {"id":"cuy-chactado","nombre":"Cuy chactado","categoria":"Fondos","descripcion":"Cuy entero frito a la piedra, con papa sancochada y choclo.","precios":[5800,6200],"foto":"public/img/platos/fondos/cuy-chactado.webp"},
+      {"id":"chaufa-de-pollo","nombre":"Chaufa de pollo","categoria":"Fondos","descripcion":"Arroz salteado al wok con pollo, huevo, cebolla china y sillao.","precios":[3200,3400],"foto":"public/img/platos/fondos/chaufa-de-pollo.webp"},
+      {"id":"pescado-a-lo-macho","nombre":"Pescado a lo macho","categoria":"Fondos","descripcion":"Filete de pescado frito bañado en salsa de mariscos y ají panca, con arroz.","precios":[5200,5500],"foto":"public/img/platos/fondos/pescado-a-lo-macho.webp"},
+      {"id":"olluquito-con-charqui","nombre":"Olluquito con charqui","categoria":"Fondos","descripcion":"Olluco en tiras guisado con charqui y ají panca, con arroz blanco.","precios":[3400,3600],"foto":"public/img/platos/fondos/olluquito-con-charqui.webp"},
+      {"id":"papa-a-la-huancaina","nombre":"Papa a la huancaína","categoria":"Entradas","descripcion":"Papa amarilla en crema de ají amarillo y queso fresco, con huevo y aceituna.","precios":[1800,2000],"foto":"public/img/platos/entradas/papa-a-la-huancaina.webp"},
+      {"id":"ocopa-arequipena","nombre":"Ocopa arequipeña","categoria":"Entradas","descripcion":"Papa sancochada en salsa de huacatay, maní y queso fresco, con huevo.","precios":[1900,2100],"foto":"public/img/platos/entradas/ocopa-arequipena.webp"},
+      {"id":"ceviche-clasico","nombre":"Ceviche clásico","categoria":"Entradas","descripcion":"Pescado del día en leche de tigre, con camote, choclo y cebolla.","precios":[3400,3600],"foto":"public/img/platos/entradas/ceviche-clasico.webp"},
+      {"id":"anticuchos-de-corazon","nombre":"Anticuchos de corazón","categoria":"Entradas","descripcion":"Brochetas de corazón de res a la parrilla, con papa dorada y choclo.","precios":[2600,2800],"foto":"public/img/platos/entradas/anticuchos-de-corazon.webp"},
+      {"id":"choclo-con-queso","nombre":"Choclo con queso","categoria":"Entradas","descripcion":"Choclo serrano tierno con queso fresco y uchucuta de rocoto.","precios":[1600,1800],"foto":"public/img/platos/entradas/choclo-con-queso.webp"},
+      {"id":"tamal-criollo","nombre":"Tamal criollo","categoria":"Entradas","descripcion":"Tamal de maíz con cerdo y ají, en hoja de plátano, con salsa criolla.","precios":[1400,1600],"foto":"public/img/platos/entradas/tamal-criollo.webp"},
+      {"id":"solterito-arequipeno","nombre":"Solterito arequipeño","categoria":"Entradas","descripcion":"Ensalada de habas, queso fresco, choclo, rocoto y aceituna.","precios":[1700,1900],"foto":"public/img/platos/entradas/solterito-arequipeno.webp"},
+      {"id":"yucas-fritas-con-huancaina","nombre":"Yucas fritas con huancaína","categoria":"Entradas","descripcion":"Bastones de yuca dorada con salsa huancaína.","precios":[1500,1700],"foto":"public/img/platos/entradas/yucas-fritas-con-huancaina.webp"},
+      {"id":"empanada-criolla-de-carne","nombre":"Empanada criolla de carne","categoria":"Entradas","descripcion":"Empanada horneada rellena de carne, cebolla, huevo y aceituna.","precios":[900,1000],"foto":"public/img/platos/entradas/empanada-criolla-de-carne.webp"},
+      {"id":"sopa-de-quinua","nombre":"Sopa de quinua","categoria":"Entradas","descripcion":"Sopa andina de quinua con papa, zapallo y queso fresco.","precios":[1600,1800],"foto":"public/img/platos/entradas/sopa-de-quinua.webp"},
+      {"id":"palta-rellena","nombre":"Palta rellena","categoria":"Entradas","descripcion":"Palta rellena de pollo, papa y verduras en mayonesa casera.","precios":[2200,2400],"foto":"public/img/platos/entradas/palta-rellena.webp"},
+      {"id":"choritos-a-la-chalaca","nombre":"Choritos a la chalaca","categoria":"Entradas","descripcion":"Choros al vapor con salsa chalaca de cebolla, tomate, choclo y limón.","precios":[2400,2600],"foto":"public/img/platos/entradas/choritos-a-la-chalaca.webp"},
+      {"id":"tiradito-al-aji-amarillo","nombre":"Tiradito al ají amarillo","categoria":"Entradas","descripcion":"Láminas de pescado fresco en crema de ají amarillo y limón.","precios":[3200,3400],"foto":"public/img/platos/entradas/tiradito-al-aji-amarillo.webp"},
+      {"id":"tequenos-de-queso","nombre":"Tequeños de queso","categoria":"Entradas","descripcion":"Masa crocante rellena de queso, con guacamole.","precios":[1800,2000],"foto":"public/img/platos/entradas/tequenos-de-queso.webp"},
+      {"id":"sopa-criolla","nombre":"Sopa criolla","categoria":"Entradas","descripcion":"Sopa de carne con fideos, leche, huevo y un toque de ají panca.","precios":[2200,2400],"foto":"public/img/platos/entradas/sopa-criolla.webp"},
+      {"id":"refresco-de-maracuya","nombre":"Refresco de maracuyá","categoria":"Bebidas","descripcion":"Refresco de maracuyá natural, endulzado al punto.","precios":[900,1000],"foto":"public/img/platos/bebidas/refresco-de-maracuya.webp"},
+      {"id":"limonada-con-hierbabuena","nombre":"Limonada con hierbabuena","categoria":"Bebidas","descripcion":"Limonada fresca licuada con hierbabuena.","precios":[900,1000],"foto":"public/img/platos/bebidas/limonada-con-hierbabuena.webp"},
+      {"id":"emoliente-caliente","nombre":"Emoliente caliente","categoria":"Bebidas","descripcion":"Infusión de cebada, linaza y hierbas, con limón.","precios":[800,900],"foto":"public/img/platos/bebidas/emoliente-caliente.webp"},
+      {"id":"refresco-de-camu-camu","nombre":"Refresco de camu camu","categoria":"Bebidas","descripcion":"Refresco de camu camu amazónico, rico en vitamina C.","precios":[1000,1100],"foto":"public/img/platos/bebidas/refresco-de-camu-camu.webp"},
+      {"id":"pisco-sour","nombre":"Pisco sour","categoria":"Bebidas","descripcion":"Pisco quebranta, limón, jarabe de goma, clara de huevo y amargo de angostura.","precios":[2400,2600],"foto":"public/img/platos/bebidas/pisco-sour.webp"},
+      {"id":"chilcano-de-pisco","nombre":"Chilcano de pisco","categoria":"Bebidas","descripcion":"Pisco con ginger ale, limón y amargo de angostura.","precios":[2000,2200],"foto":"public/img/platos/bebidas/chilcano-de-pisco.webp"},
+      {"id":"refresco-de-aguaymanto","nombre":"Refresco de aguaymanto","categoria":"Bebidas","descripcion":"Refresco de aguaymanto andino con un toque de canela.","precios":[1000,1100],"foto":"public/img/platos/bebidas/refresco-de-aguaymanto.webp"},
+      {"id":"batido-de-lucuma","nombre":"Batido de lúcuma","categoria":"Bebidas","descripcion":"Batido cremoso de lúcuma con leche.","precios":[1200,1300],"foto":"public/img/platos/bebidas/batido-de-lucuma.webp"},
+      {"id":"mate-de-muna","nombre":"Mate de muña","categoria":"Bebidas","descripcion":"Infusión digestiva de muña andina.","precios":[600,700],"foto":"public/img/platos/bebidas/mate-de-muna.webp"},
+      {"id":"cafe-pasado","nombre":"Café pasado","categoria":"Bebidas","descripcion":"Café de altura de Chanchamayo, pasado en goteo.","precios":[800,900],"foto":"public/img/platos/bebidas/cafe-pasado.webp"},
+      {"id":"chicha-de-jora","nombre":"Chicha de jora","categoria":"Bebidas","descripcion":"Chicha de jora fermentada a la manera tradicional.","precios":[900,1000],"foto":"public/img/platos/bebidas/chicha-de-jora.webp"},
+      {"id":"jugo-de-papaya","nombre":"Jugo de papaya","categoria":"Bebidas","descripcion":"Jugo de papaya fresca licuada al momento.","precios":[1000,1100],"foto":"public/img/platos/bebidas/jugo-de-papaya.webp"},
+      {"id":"refresco-de-tumbo","nombre":"Refresco de tumbo","categoria":"Bebidas","descripcion":"Refresco de tumbo serrano, ácido y fragante.","precios":[900,1000],"foto":"public/img/platos/bebidas/refresco-de-tumbo.webp"},
+      {"id":"chocolate-caliente-cusqueno","nombre":"Chocolate caliente cusqueño","categoria":"Bebidas","descripcion":"Chocolate de taza cusqueño con leche, canela y clavo.","precios":[1200,1300],"foto":"public/img/platos/bebidas/chocolate-caliente-cusqueno.webp"},
+      {"id":"algarrobina","nombre":"Algarrobina","categoria":"Bebidas","descripcion":"Cóctel de pisco, algarrobina, leche y huevo, con canela.","precios":[2200,2400],"foto":"public/img/platos/bebidas/algarrobina.webp"},
+      {"id":"picarones","nombre":"Picarones","categoria":"Postres","descripcion":"Anillos fritos de zapallo y camote con miel de chancaca.","precios":[1400,1500],"foto":"public/img/platos/postres/picarones.webp"},
+      {"id":"mazamorra-morada","nombre":"Mazamorra morada","categoria":"Postres","descripcion":"Mazamorra de maíz morado con piña y canela.","precios":[1000,1100],"foto":"public/img/platos/postres/mazamorra-morada.webp"},
+      {"id":"arroz-con-leche","nombre":"Arroz con leche","categoria":"Postres","descripcion":"Arroz con leche cremoso, con canela y clavo.","precios":[1000,1100],"foto":"public/img/platos/postres/arroz-con-leche.webp"},
+      {"id":"turron-de-dona-pepa","nombre":"Turrón de Doña Pepa","categoria":"Postres","descripcion":"Turrón de capas crocantes con miel de frutas y grageas.","precios":[1200,1300],"foto":"public/img/platos/postres/turron-de-dona-pepa.webp"},
+      {"id":"queso-helado-arequipeno","nombre":"Queso helado arequipeño","categoria":"Postres","descripcion":"Helado artesanal de leche, coco y canela.","precios":[1300,1400],"foto":"public/img/platos/postres/queso-helado-arequipeno.webp"},
+      {"id":"crema-volteada","nombre":"Crema volteada","categoria":"Postres","descripcion":"Flan de leche y huevo con caramelo.","precios":[1100,1200],"foto":"public/img/platos/postres/crema-volteada.webp"},
+      {"id":"alfajores-de-maicena","nombre":"Alfajores de maicena","categoria":"Postres","descripcion":"Alfajores de maicena rellenos de manjar blanco.","precios":[900,1000],"foto":"public/img/platos/postres/alfajores-de-maicena.webp"},
+      {"id":"mousse-de-lucuma","nombre":"Mousse de lúcuma","categoria":"Postres","descripcion":"Mousse aireado de lúcuma.","precios":[1400,1500],"foto":"public/img/platos/postres/mousse-de-lucuma.webp"},
+      {"id":"pastel-de-choclo-dulce","nombre":"Pastel de choclo dulce","categoria":"Postres","descripcion":"Pastel horneado de choclo tierno, pasas y canela.","precios":[1300,1400],"foto":"public/img/platos/postres/pastel-de-choclo-dulce.webp"},
+      {"id":"chocotejas-de-pecana","nombre":"Chocotejas de pecana","categoria":"Postres","descripcion":"Bombones de chocolate rellenos de manjar blanco y pecanas.","precios":[1200,1300],"foto":"public/img/platos/postres/chocotejas-de-pecana.webp"},
+      {"id":"king-kong-de-manjar-blanco","nombre":"King Kong de manjar blanco","categoria":"Postres","descripcion":"Capas de galleta con manjar blanco, dulce de piña y maní.","precios":[1300,1400],"foto":"public/img/platos/postres/king-kong-de-manjar-blanco.webp"},
+      {"id":"mazamorra-de-calabaza","nombre":"Mazamorra de calabaza","categoria":"Postres","descripcion":"Mazamorra de zapallo con leche, canela y clavo.","precios":[1000,1100],"foto":"public/img/platos/postres/mazamorra-de-calabaza.webp"},
+      {"id":"helado-de-chirimoya","nombre":"Helado de chirimoya","categoria":"Postres","descripcion":"Helado artesanal de chirimoya.","precios":[1200,1300],"foto":"public/img/platos/postres/helado-de-chirimoya.webp"},
+      {"id":"frejol-colado","nombre":"Frejol colado","categoria":"Postres","descripcion":"Dulce de frejol negro con chancaca, ajonjolí y clavo.","precios":[1100,1200],"foto":"public/img/platos/postres/frejol-colado.webp"},
+      {"id":"ranfanote","nombre":"Ranfañote","categoria":"Postres","descripcion":"Pan frito en miel de chancaca con queso, coco, pasas y pecanas.","precios":[1200,1300],"foto":"public/img/platos/postres/ranfanote.webp"}
+    ];
+    const categorias = [...document.querySelectorAll('[data-categoria]')];
+    const selector = document.querySelector('#sede-carta');
+    const sedeActual = document.querySelector('#sede-actual');
+    const conteo = document.querySelector('#conteo-carta');
+    const platos = document.querySelector('#platos');
+    const plantilla = document.querySelector('#plantilla-plato');
+    const estado = document.querySelector('#estado-carta');
+    const precioEnSoles = new Intl.NumberFormat('es-PE', { maximumFractionDigits: 2 });
+    const seccionCarta = document.querySelector('#carta');
+    const cartaPortada = document.querySelector('#carta-portada');
+    const cartaCompleta = document.querySelector('#vista-carta-completa');
+    const tituloVistaCompleta = document.querySelector('#titulo-carta-completa');
+    const tituloVistaPrevia = document.querySelector('#titulo-carta');
+    const verMas = document.querySelector('#ver-carta-completa');
+    const enlacePachamanca = document.querySelector('#ver-pachamanca');
+    let vistaCompleta = false;
+    let categoriaActual = 'Fondos';
+
+    function mostrarCarta() {
+      const sede = selector.selectedOptions[0].text;
+      const indice = Number(selector.value);
+      const disponibles = window.Fogon ? carta.filter(plato => window.Fogon.publicActive(plato, indice)) : carta;
+      const seleccion = categoriaActual === 'Todos' ? disponibles : disponibles.filter(plato => plato.categoria === categoriaActual);
+      const visibles = vistaCompleta ? seleccion : seleccion.slice(0, 5);
+      const tarjetas = visibles.map(plato => {
+        const tarjeta = plantilla.content.cloneNode(true);
+        tarjeta.querySelector('article').id = `plato-${plato.id}`;
+        tarjeta.querySelector('img').src = plato.foto;
+        const tipo = tarjeta.querySelector('.plato-tipo');
+        tipo.hidden = categoriaActual !== 'Todos';
+        tipo.textContent = plato.categoria;
+        tarjeta.querySelector('h3').textContent = plato.nombre;
+        const precio = window.Fogon ? window.Fogon.publicPrice(plato, indice) : plato.precios[indice];
+        tarjeta.querySelector('.plato-precio').textContent = `S/ ${precioEnSoles.format(precio / 100)}`;
+        tarjeta.querySelector('.plato-descripcion').textContent = plato.descripcion;
+        if (vistaCompleta) window.Fogon?.pedidoWeb?.card(tarjeta, plato, indice);
+        return tarjeta;
+      });
+      platos.replaceChildren(...tarjetas);
+      sedeActual.textContent = sede;
+      enlacePachamanca.href = disponibles.some(plato => plato.id === 'pachamanca') ? '#carta-completa/pachamanca' : '#carta-completa/fondos';
+      verMas.href = `#carta-completa/${categoriaActual.toLowerCase()}`;
+      conteo.textContent = tarjetas.length === disponibles.length ? `${disponibles.length} platos` : `${tarjetas.length} de ${disponibles.length} platos`;
+      estado.textContent = `${categoriaActual}, ${sede}: ${tarjetas.length} opciones.`;
+      window.Fogon?.pedidoWeb?.render(vistaCompleta, indice);
+    }
+
+    function elegirCategoria(categoria) {
+      categoriaActual = categoria;
+      for (const boton of categorias) {
+        boton.setAttribute('aria-pressed', String(boton.dataset.categoria === categoria));
+      }
+      mostrarCarta();
+    }
+
+    function abrirVistaCarta(completa, parametro) {
+      const cambio = completa !== vistaCompleta;
+      if (cambio) {
+        vistaCompleta = completa;
+        (completa ? cartaCompleta : cartaPortada).append(seccionCarta);
+        tituloVistaCompleta.hidden = !completa;
+        tituloVistaPrevia.hidden = completa;
+        seccionCarta.setAttribute('aria-labelledby', completa ? tituloVistaCompleta.id : tituloVistaPrevia.id);
+        verMas.parentElement.hidden = completa;
+      }
+
+      const plato = completa ? carta.find(item => item.id === parametro) : undefined;
+      const filtro = completa ? categorias.find(boton => boton.dataset.categoria.toLowerCase() === parametro) : undefined;
+      const categoria = plato?.categoria ?? filtro?.dataset.categoria;
+      if (categoria && categoria !== categoriaActual) elegirCategoria(categoria);
+      else if (cambio) mostrarCarta();
+      return plato ? document.getElementById(`plato-${plato.id}`) : null;
+    }
+
+    for (const boton of categorias) {
+      boton.addEventListener('click', () => {
+        elegirCategoria(boton.dataset.categoria);
+        if (vistaCompleta) window.history.replaceState(window.history.state, '', verMas.hash);
+      });
+    }
+    selector.addEventListener('change', mostrarCarta);
+    for (const enlace of document.querySelectorAll('[data-sede]')) {
+      enlace.addEventListener('click', () => {
+        selector.value = enlace.dataset.sede;
+        mostrarCarta();
+      });
+    }
+    mostrarCarta();
+    document.querySelector('#controles-carta').hidden = false;
+    verMas.parentElement.hidden = false;
+    window.cartaFogon = { productos: carta, selector, mostrar: mostrarCarta, cambiarVista: abrirVistaCarta };
+
+    const video = document.querySelector('#video-pachamanca');
+    const movimientoReducido = matchMedia('(prefers-reduced-motion: reduce)');
+    let videoVisible = true;
+
+    function actualizarVideo() {
+      if (videoVisible && !movimientoReducido.matches) {
+        video.play().catch(() => {
+          // El navegador puede bloquear la reproducción automática.
+        });
+      } else {
+        video.pause();
+      }
+    }
+
+    movimientoReducido.addEventListener('change', actualizarVideo);
+
+    if ('IntersectionObserver' in window) {
+      const observador = new IntersectionObserver(([entrada]) => {
+        videoVisible = entrada.intersectionRatio >= 0.25;
+        actualizarVideo();
+      }, { threshold: 0.25 });
+      observador.observe(video);
+    } else {
+      actualizarVideo();
+    }
+  </script>
+</body>
+</html>

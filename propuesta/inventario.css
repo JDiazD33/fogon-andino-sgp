@@ -1,0 +1,94 @@
+.op-inventory {
+  --inventario-libre: #47614d;
+  --inventario-reservado: #aa753d;
+  --inventario-vacio: #e5e2dc;
+  margin-top: clamp(22px, 4vw, 56px);
+  padding-top: clamp(22px, 3.5vw, 38px);
+  border-top: 1px solid var(--regla);
+}
+
+.inventory-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 5px 15px;
+  margin-bottom: clamp(20px, 3vw, 34px);
+}
+
+.inventory-heading h2 {
+  font: 320 clamp(1.5rem, 3vw, 2.4rem)/1.15 var(--jost);
+  letter-spacing: .055em;
+  text-transform: uppercase;
+}
+
+.inventory-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr);
+  align-items: start;
+  gap: clamp(24px, 4vw, 56px);
+}
+
+.inventory-layout h3 {
+  font: italic 395 clamp(1.3rem, 2.2vw, 1.8rem)/1.14 var(--newsreader);
+}
+
+.inventory-help { margin-top: 6px; color: var(--gris); font-size: .9rem; }
+
+.inventory-legend { display: flex; flex-wrap: wrap; gap: 6px 19px; margin-block: 13px; color: var(--gris); font-size: .81rem; }
+.inventory-legend span { display: inline-flex; align-items: center; gap: 7px; }
+.inventory-legend span::before { content: ''; width: 11px; height: 5px; background: var(--inventario-libre); }
+.inventory-legend span + span::before { background: var(--inventario-reservado); }
+
+.inventory-restock {
+  margin-block: 14px;
+  padding: 9px 12px;
+  border-left: 2px solid var(--brasa);
+  background: #f1e8e0;
+  color: var(--tinta);
+  font-size: .88rem;
+}
+
+.inventory-search { margin-block: 15px 12px; }
+.inventory-group { margin: 0; border-top: 1px solid var(--regla); }
+.inventory-group:last-child { border-bottom: 1px solid var(--regla); }
+.inventory-group summary { cursor: pointer; }
+.inventory-group summary > span:first-child { padding-inline: 6px; }
+.inventory-group-count { float: right; color: var(--gris); font-size: .8rem; font-variant-numeric: tabular-nums; }
+
+.inventory-stock-list { margin: 0; padding: 0 0 6px 16px; list-style: none; }
+.inventory-stock-row { display: grid; gap: 7px; padding-block: 11px; border-top: 1px solid var(--regla); }
+.inventory-stock-name { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 3px 9px; }
+.inventory-stock-name > strong { font-weight: 600; }
+
+.inventory-meter { display: block; width: 100%; height: 6px; border: 0; background: var(--inventario-reservado); }
+.inventory-meter::-webkit-meter-bar { border: 0; border-radius: 0; background: var(--inventario-reservado); }
+.inventory-meter::-webkit-meter-optimum-value, .inventory-meter::-webkit-meter-suboptimum-value,
+.inventory-meter::-webkit-meter-even-less-good-value { background: var(--inventario-libre); }
+.inventory-meter::-moz-meter-bar { background: var(--inventario-libre); }
+.inventory-meter[data-empty='true'] { background: var(--inventario-vacio); }
+.inventory-meter[data-empty='true']::-webkit-meter-bar { background: var(--inventario-vacio); }
+
+.inventory-stock-values { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px 6px; margin: 0; font-variant-numeric: tabular-nums; }
+.inventory-stock-values dt { color: var(--gris); font-size: .76rem; }
+.inventory-stock-values dd { margin: 0; font-size: .9rem; }
+
+.inventory-calculator { min-width: 0; }
+.inventory-recipe-fields { display: grid; grid-template-columns: minmax(0, 1fr) 6.5rem; gap: 9px; margin-top: 14px; }
+.inventory-recipe-status { padding: 10px 12px; border-left: 2px solid var(--inventario-libre); background: #e8eee8; font-size: .9rem; }
+.inventory-recipe-status[data-warning='true'] { border-left-color: var(--brasa); background: #f1e8e0; }
+.op-inventory .inventory-recipe-table :is(th, td) { padding-inline: 4px; line-height: 1.3; }
+.inventory-recipe-table th:first-child { overflow-wrap: anywhere; }
+.inventory-recipe-table td { font-variant-numeric: tabular-nums; }
+.inventory-shortfall { color: var(--brasa); font-weight: 650; }
+
+@media (max-width: 840px) {
+  .inventory-layout { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 390px) {
+  .inventory-stock-list { padding-left: 8px; }
+  .inventory-stock-values { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .inventory-recipe-fields { grid-template-columns: minmax(0, 1fr) 5.1rem; }
+  .inventory-recipe-table { font-size: .82rem; }
+}

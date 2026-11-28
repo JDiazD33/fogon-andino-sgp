@@ -1,6 +1,6 @@
 # Fogón Andino S.A.C. · Prototipo del SGP v2
 
-Prototipo académico del SGP v2: las **seis capacidades** que la Figura 14 (p. 46) del Avance 2 asigna a la plataforma omnicanal —carta y precios por sede, gestión de pedidos (OMS), cocina digital (KDS), delivery y despacho, reservas de mesa, y caja y cobros— funcionando sobre los **seis canales de venta** del caso: salón, web, WhatsApp, teléfono, Rappi y PedidosYa. La aplicación usa datos ficticios de Miraflores y San Isidro. La PWA en React se adapta al navegador del celular y de la computadora, NestJS expone la API REST y PostgreSQL conserva los pedidos, sus eventos y las existencias.
+Prototipo académico del SGP v2: las **seis capacidades** que la Figura 14 (p. 46) del Avance 2 asigna a la plataforma omnicanal —carta y precios por sede, gestión de pedidos (OMS), cocina digital (KDS), delivery y despacho, reservas de mesa, y caja y cobros— funcionando sobre los **seis canales de venta** del caso: salón, web, WhatsApp, teléfono, Rappi y PedidosYa. La aplicación usa datos ficticios de Miraflores y San Isidro. La interfaz web se adapta al navegador del celular y de la computadora, NestJS expone la API REST y PostgreSQL conserva los pedidos, sus eventos y las existencias.
 
 ## Arranque local
 
@@ -18,16 +18,17 @@ Abre [http://127.0.0.1:4173](http://127.0.0.1:4173). Mantén la terminal abierta
 
 | Vista | Dirección en la computadora |
 | --- | --- |
-| Carta | [/#carta](http://127.0.0.1:4173/#carta) |
+| Inicio | [/](http://127.0.0.1:4173/) |
+| Carta completa | [/#carta-completa](http://127.0.0.1:4173/#carta-completa) |
 | Pedidos | [/#seguimiento](http://127.0.0.1:4173/#seguimiento) |
-| Reservas | [/#reservas](http://127.0.0.1:4173/#reservas) |
-| Salón | [/#salon](http://127.0.0.1:4173/#salon) |
-| Canales | [/#canales](http://127.0.0.1:4173/#canales) |
-| Cocina | [/#cocina](http://127.0.0.1:4173/#cocina) |
-| Despacho | [/#despacho](http://127.0.0.1:4173/#despacho) |
-| Caja | [/#caja](http://127.0.0.1:4173/#caja) |
-| Gestión | [/#gestion](http://127.0.0.1:4173/#gestion) |
-| Evidencia | [/#evidencia](http://127.0.0.1:4173/#evidencia) |
+| Reservas | [/?modo=administrativo#reservas](http://127.0.0.1:4173/?modo=administrativo#reservas) |
+| Salón | [/?modo=administrativo#salon](http://127.0.0.1:4173/?modo=administrativo#salon) |
+| Canales | [/?modo=administrativo#canales](http://127.0.0.1:4173/?modo=administrativo#canales) |
+| Cocina | [/?modo=administrativo#cocina](http://127.0.0.1:4173/?modo=administrativo#cocina) |
+| Despacho | [/?modo=administrativo#despacho](http://127.0.0.1:4173/?modo=administrativo#despacho) |
+| Caja | [/?modo=administrativo#caja](http://127.0.0.1:4173/?modo=administrativo#caja) |
+| Gestión | [/?modo=administrativo#gestion](http://127.0.0.1:4173/?modo=administrativo#gestion) |
+| Evidencia | [/?modo=administrativo#evidencia](http://127.0.0.1:4173/?modo=administrativo#evidencia) |
 
 ### Comprobar las reglas de negocio
 
@@ -63,10 +64,12 @@ El modo `HOST=0.0.0.0` permite acceder desde la red y las vistas de la demo est�
 
 ## Versión publicada en Render
 
-La demo está publicada en **[https://fogon-andino.onrender.com](https://fogon-andino.onrender.com)** con el plan gratis de Render. `render.yaml` define el servicio web, que compila con `npm ci --include=dev && npm run build` y arranca con `node server.mjs`, y una base PostgreSQL dedicada a la demo. Cada `git push` a `main` del repositorio privado `JDiazD33/fogon-andino-sgp` la vuelve a desplegar.
+El servicio **[https://fogon-andino.onrender.com](https://fogon-andino.onrender.com)** se configura en `render.yaml`. Render compila con `npm ci --include=dev && npm run build`, arranca con `node server.mjs` y comprueba el estado en `/api/health`. La conexión a PostgreSQL llega al servidor por `DATABASE_URL`. Con `main` vinculada y el despliegue automático activado, un push a esa rama inicia la publicación.
+
+La compilación publica el rediseño en `/` y conserva `/propuesta-fogon-andino.html` como enlace alternativo. La interfaz consulta la API original en el mismo dominio que la página.
 
 - **La primera visita tarda.** El plan gratis apaga el servicio tras 15 minutos sin visitas y la primera carga demora cerca de un minuto: ábrelo un rato antes de exponer. La base gratuita vence a los 30 días de creada.
-- **Igual que la versión local.** La versión publicada lleva los mismos videos de referencia de `public/video/`: `render.yaml` define `VITE_VIDEOS_REFERENCIA=1` al compilar, como `.env.local` en la computadora. Es una demo para el profesor: la página pide a los buscadores que no la indexen (`robots.txt` y la etiqueta `robots`).
+- **Demostración académica.** La versión publicada incluye el video de pachamanca de la portada. La página pide a los buscadores que no la indexen (`robots.txt` y la etiqueta `robots`).
 - **El QR del comprobante funciona desde cualquier celular.** En la nube, el QR de cada boleta o factura abre el seguimiento del pedido en esa misma dirección.
 - **El reinicio de datos está protegido.** En la nube, `POST /api/reset` exige la cabecera `x-reset-token` con el valor de `RESET_TOKEN`, que Render generó y se ve en el servicio **fogon-andino → Environment**. Para dejar la demo limpia antes de exponer:
 
@@ -80,7 +83,7 @@ La demo está publicada en **[https://fogon-andino.onrender.com](https://fogon-a
 
 Ensaya primero con los datos reiniciados. El recorrido completo toma unos ocho minutos; los pasos 1, 2, 4 y 5 bastan para una versión corta de cuatro minutos.
 
-En las vistas internas, la barra muestra **Salón**, **Cocina**, **Despacho** y **Caja**; **Reservas**, **Canales**, **Gestión** y **Evidencia** están en el menú **Más**. Las direcciones (`/#reservas`, `/#evidencia`, etc.) no cambian.
+La portada abre en modo cliente. Pulsa **Modo administrativo** en la cabecera para abrir las vistas operativas. Los enlaces directos existentes, como `/#reservas` y `/#evidencia`, también abren sus vistas administrativas.
 
 1. **Carta y sede.** Abre la carta en el celular. En Miraflores, muestra la trucha frita agotada porque no llegó trucha. Cambia a San Isidro para ver su disponibilidad y precio; allí, en cambio, el agotado es el cuy chactado. Vuelve a Miraflores. La API calcula la disponibilidad con las recetas y existencias de la sede. Para delivery también valida que la zona elegida esté cubierta por esa sede.
 2. **Dos canales, una cola.** En la carta, pide un tacu tacu con lomo para la zona Miraflores con el pago de prueba aprobado. En **Salón**, agrega una chicha de jora a la **Mesa 01** y confirma. Muestra los dos IDs en **Cocina**, uno etiquetado como web y el otro como salón. La cola recibe ambos pedidos desde la API sin volver a digitarlos.
@@ -106,7 +109,7 @@ Como ensayos alternativos, selecciona **Fuera de cobertura** o **Rechazado** al 
 | C · Seis capacidades del SGP v2 | Carta y precios por sede (**Gestión**), OMS (**Canales**, **Salón**, **Carta**), KDS (**Cocina**), delivery y despacho (**Despacho**), reservas (**Reservas**) y caja y cobros (**Caja**). Las tablas CANAL, PAGO, COMPROBANTE, REPARTIDOR, ENTREGA, MESA y RESERVA de la Figura 11 existen en PostgreSQL. Reglas impuestas por la base: un pedido de agregador entra una sola vez (`UNIQUE (channel, external_ref)`), solo el salón deja cuentas abiertas, el correlativo del comprobante es único por serie y la factura exige RUC. Avance 2, Figuras 11 y 14, pp. 39 y 46. |
 | B · Mejoras M1–M7 | M1 ingreso de todos los canales por API (**Canales**); M2 stock por receta y cobertura; M4 KDS con prioridad y tiempo objetivo; M5 comprobante desde el cobro y descargo por receta; M6 asignación de repartidor y código de entrega; M7 indicadores en **Gestión** y en `GET /api/metrics`. M3 (enrutamiento automático a la sede con capacidad) queda fuera: la sede se elige a mano. Avance 2, Figura 8, p. 31. |
 | C · Reservas de mesa | La agenda implementa la sexta capacidad que la Figura 14 (p. 46) asigna al SGP v2: reserva de mesa, con MESA y RESERVA en el modelo de datos de la Figura 11 (p. 39). La regla de una mesa por turno la impone un índice único parcial en PostgreSQL y cada cambio de estado publica un evento de dominio. Es la capacidad que la Figura 14 declara y la Figura 15 (p. 54) no lista entre los microservicios. Avance 2, Figuras 11, 14 y 15, pp. 39, 46 y 54. |
-| D · Tecnología | Muestra la PWA en React en el navegador móvil y la API de NestJS con persistencia en PostgreSQL. La arquitectura objetivo añade servicios administrados de AWS. Avance 2, Figura 15 y Tabla 21, pp. 54 y 56. |
+| D · Tecnología | Muestra la interfaz web en el navegador móvil y la API de NestJS con persistencia en PostgreSQL. La arquitectura objetivo añade servicios administrados de AWS. Avance 2, Figura 15 y Tabla 21, pp. 54 y 56. |
 | E · Soluciones | Vincula las brechas G02 (canales aislados), G03 (cocina sin control de tiempos) y G04 (despacho manual) con P04. Para el hub y conectores de producción, señala P05. Avance 2, Tablas 22 y 23, pp. 57 y 59. |
 | F · Migración | Señala H3 (fundaciones disponibles), H4 (piloto de Miraflores) y H6 (despliegue en siete sedes). Explica que la demo valida un flujo antes de esos hitos. Avance 2, Figura 17, p. 68. |
 | G · Gobierno | Muestra el contrato OpenAPI y el JSON de un pedido como evidencia inicial de la revisión de interfaces C3. Conserva como criterio de prueba el mismo ID en todas las vistas y la validación del código de entrega. La preproducción del programa incluye controles como carga y conmutación C7. Avance 2, Tabla 32, p. 74. |
@@ -147,27 +150,27 @@ Referencias de trazabilidad en Avance 2, Tabla 38, pp. 83–84. Los controles de
 - **Reservas** es la sexta capacidad que la Figura 14 (p. 46) del Avance 2 asigna al SGP v2: reserva de mesa. La agenda cruza las mesas de la sede con los turnos de almuerzo y cena. La regla de una mesa por turno está impuesta por un índice único parcial en PostgreSQL, no por la interfaz; la capacidad en lugares se valida contra la mesa. Cada cambio de estado publica un evento de dominio propio, visible en **Evidencia**.
 - **Salón** reconoce la reserva viva de la mesa: al registrar la comanda, el POS indica a quién espera esa mesa y para qué turno.
 
-### Referencias visuales
+### Referencias visuales de la interfaz original
 
 La navegación, el progreso de pedidos y el campo de cuatro dígitos se inspiraron en [Gooey nav](https://www.rareui.com/components/gooeynav), [Step player](https://www.rareui.com/components/stepplayer) y [OTP Input](https://www.rareui.com/components/otpinput) de Rare UI. Las interacciones se implementaron con React y CSS.
 
-### El service worker y la página sin servidor
+### Instalación y demostración por archivo
 
-La PWA registra un service worker que guarda en caché el shell de la aplicación (`/`, el manifiesto, los iconos, las fotografías y los bundles de JS y CSS). Por eso **la página puede seguir apareciendo aunque el servidor esté apagado**: el navegador sirve el shell desde la caché y, como no puede consultar la API, la interfaz muestra el aviso *"No se pudo consultar la API local. Revisa que el servidor de la demo siga activo"* con el botón **Volver a conectar**.
+En `localhost` o HTTPS, la aplicación se puede instalar y conserva en caché la interfaz del rediseño. Los pedidos, el seguimiento y las operaciones administrativas requieren conexión al servidor.
 
-Es el comportamiento previsto de una PWA instalable, no un fallo. En un aula funciona como red de seguridad: si el servidor se cae a mitad de la demostración, la app sigue visible y explica qué pasó.
+Abre `propuesta-fogon-andino.html` directamente desde la carpeta del repositorio para ensayar con datos de ejemplo guardados en el navegador. Para trabajar con la API y guardar operaciones en PostgreSQL, abre la dirección del servidor de la demo.
 
-Si necesitas que la pestaña se veo completamente vacía, borra los datos del sitio en Safari (⌘⇧⌫ en «Borrar historial y datos de sitios», o Ajustes ▸ Privacidad ▸ Gestionar datos de sitios ▸ quitar `127.0.0.1`). Ojo con lo mismo al revés: si cambias el código y el navegador sigue mostrando la versión anterior, es el service worker sirviendo el bundle cacheado; una recarga forzada (⌘⇧R) o borrar los datos del sitio lo resuelven.
+Si un navegador que abrió la versión original todavía muestra la portada anterior, recarga la página con el servidor en ejecución para actualizar la caché.
 
-### Diseño de la interfaz
+### Diseño de la interfaz original en React
 
 La interfaz sigue la dirección de arte de [Central Restaurante](https://centralrestaurante.com.pe): una portada a sangre con dos videos, papel claro `#f2f2f2` con tinta `#222`, un recorrido vertical de videos cuadrados con textos que alternan de lado, titulares en mayúsculas ultraligeras (Jost), cursivas serif finas (Newsreader), un logotipo condensado (Big Shoulders Display) y un pie oscuro de tres columnas. El sitio público muestra solo **Carta** y **Pedidos**; **Operación** abre las vistas internas, que tienen su propia barra con las menos usadas en **Más**. **Gestión** y **Evidencia** muestran primero lo que se señala al exponer y pliegan el resto. La especificación completa está en [DESIGN.md](./DESIGN.md) y los tokens viven en el bloque `:root` de `src/styles.css`.
 
 El rediseño es íntegramente de presentación: no alteró la API, el modelo de datos, los flujos de pedido ni la boleta en PDF.
 
-### Videos de la portada
+### Videos de la portada original en React
 
-Los cuatro videos de `public/video/` (y sus pósteres `.jpg`) se copiaron de `videos-central-referencia/`: son material de **Central Restaurante**, usado solo como referencia visual provisional en este prototipo académico. La versión de Render los incluye para mostrarla al profesor; si la página se usara fuera del curso, habría que reemplazarlos por material propio. Sin `VITE_VIDEOS_REFERENCIA=1`, la portada muestra fotos propias del proyecto. La portada usa los videos 1 y 2; el recorrido, los videos 3 y 4. Los videos 5 y 6 quedaron solo en `videos-central-referencia/`: la portada ya no tiene cierre y termina en la carta. Cada video se reproduce sin sonido y solo mientras está a la vista; con «reducir movimiento» activado queda el póster fijo.
+La versión original de la demo usaba cuatro videos de **Central Restaurante** con sus pósteres `.jpg` como referencias visuales provisionales. `VITE_VIDEOS_REFERENCIA=1` seleccionaba los videos 1 y 2 para la portada y los videos 3 y 4 para el recorrido. El rediseño usa el video de pachamanca `public/video/pachamanca-portada.mp4`. Con «reducir movimiento» activado se muestra el póster fijo.
 
 ### Carta y fotos de los platos
 
